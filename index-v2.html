@@ -725,19 +725,11 @@
     // Trigger immediately (no transition) for elements already in viewport
     function initReveal() {
       revealEls.forEach(el => {
-        const rect = el.getBoundingClientRect();
-        if (rect.top < window.innerHeight) {
-          el.style.transition = 'none';
-          el.classList.add('visible');
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => { el.style.transition = ''; });
-          });
-        } else {
-          revealObserver.observe(el);
-        }
+        revealObserver.observe(el);
       });
     }
-    initReveal();
+    // ???????? ???????? ????? fade-in body ??????? ??????
+    setTimeout(initReveal, 100);
 
     // ── CAROUSEL ──
     (function() {
