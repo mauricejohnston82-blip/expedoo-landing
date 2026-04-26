@@ -203,11 +203,7 @@
       font-size: 13px; color: var(--text-muted);
       display: flex; align-items: center; gap: 8px;
     }
-    .hero-fine::before {
-      content: '';
-      width: 16px; height: 16px; flex-shrink: 0;
-      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2322c55e'%3E%3Cpath d='M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'/%3E%3C/svg%3E") center/contain no-repeat;
-    }
+    .hero-fine::before { display: none; }
 
     /* ── PHONE MOCKUP ── */
     .hero-right {
