@@ -1,0 +1,1152 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Expedoo — Track trips, fuel, and earnings. Built for expedited freight drivers in the USA." />
+  <meta property="og:title" content="Expedoo — Freight Driver App" />
+  <meta property="og:description" content="Know your numbers. Every trip. Track trips, fuel, and earnings — built for expedited freight drivers." />
+  <title>Expedoo — Freight Driver App</title>
+  <link rel="icon" href="logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #F0F2F5;
+      --surface: #E8EBF0;
+      --card: #FFFFFF;
+      --accent: #2563EB;
+      --accent-light: #3B82F6;
+      --text: #111827;
+      --text-muted: #6B7280;
+      --border: #E2E6EC;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      background-image:
+        linear-gradient(rgba(37,99,235,0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(37,99,235,0.035) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+
+    /* ─── ANIMATIONS ─────────────────────────────── */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(28px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    @keyframes heroBgShift {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    .fade-up { opacity: 0; animation: fadeInUp 0.7s ease forwards; }
+    .delay-1 { animation-delay: 0.1s; }
+    .delay-2 { animation-delay: 0.22s; }
+    .delay-3 { animation-delay: 0.36s; }
+    .delay-4 { animation-delay: 0.5s; }
+    .delay-5 { animation-delay: 0.65s; }
+
+    /* Scroll reveal — added by IntersectionObserver JS */
+    .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.65s ease, transform 0.65s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* ─── LAYOUT UTILS ───────────────────────────── */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ─── NAV ────────────────────────────────────── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255,255,255,0.88);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'Sora', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+      text-decoration: none;
+      letter-spacing: -0.3px;
+    }
+
+    /* ─── BUTTONS ────────────────────────────────── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 13px 22px;
+      border-radius: 12px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+      white-space: nowrap;
+    }
+
+    .btn-primary { background: var(--accent); color: #fff; }
+
+    .btn-primary:hover {
+      background: var(--accent-light);
+      box-shadow: 0 4px 20px rgba(37,99,235,0.35);
+      transform: translateY(-2px) scale(1.02);
+    }
+
+    .btn-outline {
+      background: #fff;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-outline:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      box-shadow: 0 4px 14px rgba(37,99,235,0.12);
+      transform: translateY(-2px) scale(1.02);
+    }
+
+    .btn-sm {
+      padding: 10px 18px;
+      font-size: 14px;
+      border-radius: 10px;
+    }
+
+    .cta-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .store-icon {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+
+    .btn-store-label {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.1;
+    }
+
+    .btn-store-label span:first-child {
+      font-size: 10px;
+      font-weight: 400;
+      opacity: 0.8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .btn-store-label span:last-child {
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    /* ─── HERO ───────────────────────────────────── */
+    #hero {
+      flex: 1;
+      padding: 120px 0 100px;
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(135deg, #EBF0FB 0%, #F0F2F5 35%, #EEF3FC 65%, #E8EEFB 100%);
+      background-size: 300% 300%;
+      animation: heroBgShift 18s ease infinite;
+    }
+
+    #hero::before {
+      content: '';
+      position: absolute;
+      top: -120px;
+      left: 30%;
+      transform: translateX(-50%);
+      width: 800px;
+      height: 700px;
+      background: radial-gradient(ellipse at center, rgba(37,99,235,0.09) 0%, transparent 65%);
+      pointer-events: none;
+    }
+
+    .hero-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      align-items: center;
+      gap: 60px;
+    }
+
+    .hero-content { max-width: 560px; }
+
+    /* ─── HERO CAROUSEL ─────────────────────────── */
+    .hero-carousel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+      position: relative;
+    }
+
+    .carousel-phone-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      width: 100%;
+      justify-content: center;
+    }
+
+    /* ── iPhone realistic black shell ── */
+    .iphone-frame-wrap {
+      position: relative;
+      width: 320px;
+      cursor: pointer;
+      flex-shrink: 0;
+      background: linear-gradient(160deg, #2a2a2a 0%, #111111 40%, #1e1e1e 60%, #080808 100%);
+      border-radius: 52px;
+      padding: 8px;
+      box-shadow:
+        0 0 0 0.5px rgba(255,255,255,0.12),
+        inset 0 0 0 0.5px rgba(255,255,255,0.06),
+        0 50px 120px rgba(0,0,0,0.55),
+        0 20px 40px rgba(0,0,0,0.3),
+        0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    /* Inner screen bezel */
+    .iphone-bezel {
+      background: #000;
+      border-radius: 46px;
+      padding: 2px;
+      overflow: hidden;
+    }
+
+    /* Side buttons */
+    .iphone-btn-vol-up,
+    .iphone-btn-vol-down,
+    .iphone-btn-silent,
+    .iphone-btn-power {
+      position: absolute;
+      background: linear-gradient(90deg, #1a1a1a, #3a3a3a, #1a1a1a);
+      border-radius: 3px;
+      z-index: 1;
+    }
+    /* Silent toggle */
+    .iphone-btn-silent {
+      left: -4px;
+      top: 17%;
+      width: 4px;
+      height: 4%;
+    }
+    /* Volume up */
+    .iphone-btn-vol-up {
+      left: -4px;
+      top: 24%;
+      width: 4px;
+      height: 9%;
+    }
+    /* Volume down */
+    .iphone-btn-vol-down {
+      left: -4px;
+      top: 35%;
+      width: 4px;
+      height: 9%;
+    }
+    /* Power button */
+    .iphone-btn-power {
+      right: -4px;
+      top: 28%;
+      width: 4px;
+      height: 13%;
+    }
+
+    /* Inner screen area — screenshot fills entirely */
+    .iphone-screen {
+      background: #000;
+      border-radius: 44px;
+      overflow: hidden;
+      position: relative;
+      aspect-ratio: 9/19.5;
+    }
+
+    /* Dynamic Island — hidden */
+    .iphone-dynamic-island { display: none; }
+
+    /* iOS Status Bar — hidden */
+    .iphone-status-bar { display: none; }
+
+    .hero-carousel .phone-frame {
+      display: none;
+    }
+
+    /* Slide container — clips the sliding track */
+    .carousel-track-clip {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      border-radius: 44px;
+    }
+
+    /* The sliding track that holds all slides side by side */
+    .carousel-track {
+      display: flex;
+      height: 100%;
+      transition: transform 300ms ease;
+    }
+
+    .carousel-slide {
+      flex: 0 0 100%;
+      height: 100%;
+      transition: filter 300ms ease, opacity 300ms ease;
+    }
+
+    .carousel-slide.inactive {
+      filter: blur(4px);
+      opacity: 0.6;
+    }
+
+    .carousel-slide img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      border-radius: 44px;
+      -webkit-user-drag: none;
+      user-select: none;
+    }
+
+    .carousel-arrow {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.72);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: none;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.14);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 22px;
+      color: var(--text);
+      transition: background 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+      flex-shrink: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+      z-index: 2;
+    }
+
+    .carousel-arrow:hover {
+      background: rgba(255,255,255,0.92);
+      box-shadow: 0 6px 28px rgba(37,99,235,0.22);
+      transform: scale(1.1);
+      color: var(--accent);
+    }
+
+    .carousel-dots {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .carousel-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--border);
+      border: none;
+      cursor: pointer;
+      transition: background 0.25s ease, transform 0.25s ease, width 0.25s ease;
+      padding: 0;
+    }
+
+    .carousel-dot.active {
+      background: var(--accent);
+      transform: scale(1.3);
+    }
+
+    @media (max-width: 900px) {
+      .hero-inner {
+        grid-template-columns: 1fr;
+        text-align: center;
+      }
+      .hero-content { max-width: 100%; }
+      .hero-sub { max-width: 100% !important; }
+      .cta-group { justify-content: center; }
+      .hero-carousel { margin: 40px auto 0; width: 100%; }
+    }
+
+    /* ─── MOBILE: arrows below phone, phone full-width ─── */
+    @media (max-width: 600px) {
+      #hero { padding: 60px 0 56px; }
+
+      .hero-carousel { gap: 16px; }
+
+      /* Stack: phone on top, arrows row below */
+      .carousel-phone-wrap {
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      /* Phone fills available width with padding */
+      .iphone-frame-wrap {
+        width: min(280px, calc(100vw - 48px));
+        order: 1;
+      }
+
+      /* Arrows row below phone — hidden on mobile */
+      .carousel-arrows-row {
+        display: none;
+      }
+
+      /* Hide arrows from phone-wrap row on mobile */
+      .carousel-phone-wrap > .carousel-arrow {
+        display: none;
+      }
+    }
+
+    @media (min-width: 601px) {
+      .carousel-arrows-row { display: none; }
+      .iphone-frame-wrap { width: min(320px, calc(100vw - 200px)); }
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(37,99,235,0.08);
+      border: 1px solid rgba(37,99,235,0.2);
+      border-radius: 100px;
+      padding: 6px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--accent);
+      margin-bottom: 24px;
+    }
+
+    .hero-badge::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: pulse 2s infinite;
+    }
+
+    h1 {
+      font-family: 'Sora', sans-serif;
+      font-size: clamp(36px, 5.5vw, 62px);
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -2px;
+      color: #0D1117;
+      margin-bottom: 20px;
+    }
+
+    h1 span {
+      background: linear-gradient(135deg, #1D4ED8 0%, #3B82F6 50%, #60A5FA 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-sub {
+      font-size: 18px;
+      color: var(--text-muted);
+      max-width: 480px;
+      margin-bottom: 36px;
+      line-height: 1.7;
+    }
+
+    /* ─── FEATURES ───────────────────────────────── */
+    #features {
+      padding: 96px 0;
+      background: var(--bg);
+    }
+
+    .features-header {
+      margin-bottom: 48px;
+    }
+
+    .features-header h2 {
+      font-family: 'Sora', sans-serif;
+      font-size: clamp(28px, 4vw, 40px);
+      font-weight: 800;
+      letter-spacing: -1px;
+      color: var(--text);
+      margin-bottom: 12px;
+    }
+
+    .features-header p {
+      font-size: 17px;
+      color: var(--text-muted);
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .feature-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-left: 3px solid transparent;
+      border-radius: 16px;
+      padding: 32px 28px;
+      transition: box-shadow 0.25s ease, transform 0.25s ease, border-left-color 0.25s ease;
+    }
+
+    .feature-card:hover {
+      box-shadow: 0 10px 36px rgba(0,0,0,0.09);
+      transform: translateY(-3px);
+      border-left-color: var(--accent);
+    }
+
+    .feature-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #1D4ED8 0%, #3B82F6 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      flex-shrink: 0;
+      box-shadow: 0 4px 14px rgba(37,99,235,0.28);
+    }
+
+    .feature-divider {
+      height: 1px;
+      background: var(--border);
+      margin-bottom: 16px;
+    }
+
+    .feature-card h3 {
+      font-family: 'Sora', sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+      color: #0D1117;
+      margin-bottom: 8px;
+      letter-spacing: -0.3px;
+    }
+
+    .feature-card p {
+      font-size: 15px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    @media (max-width: 768px) {
+      #features { padding: 60px 0; }
+      .features-grid { grid-template-columns: 1fr; gap: 14px; }
+    }
+
+    /* ─── SCREENSHOTS ───────────────────────────── */
+    #screenshots {
+      padding: 60px 0;
+      background: var(--bg);
+    }
+
+    .screenshots-row {
+      display: flex;
+      justify-content: center;
+      gap: 28px;
+      flex-wrap: wrap;
+    }
+
+    .phone-mockup {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .phone-frame {
+      width: 200px;
+      aspect-ratio: 9 / 19.5;
+      border: none;
+      border-radius: 36px;
+      overflow: hidden;
+      background: #1a1a2e;
+      flex-shrink: 0;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.08);
+    }
+
+    .phone-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 34px;
+      display: block;
+    }
+
+    .phone-label {
+      font-size: 13px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    @media (max-width: 768px) {
+      .screenshots-row {
+        display: grid;
+        grid-template-columns: repeat(2, auto);
+        gap: 20px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .screenshots-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ─── FOOTER ─────────────────────────────────── */
+    footer {
+      background: var(--surface);
+      border-top: 2px solid var(--accent);
+      padding: 40px 0;
+    }
+
+    .footer-inner {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .footer-links {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .footer-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 14px;
+      transition: color 0.18s;
+    }
+
+    .footer-links a:hover { color: var(--accent); }
+
+    .footer-copy {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* ─── RESPONSIVE ─────────────────────────────── */
+    @media (max-width: 768px) {
+      .footer-inner {
+        flex-direction: column;
+        text-align: center;
+      }
+    }
+
+    @media (max-width: 480px) {
+      h1 { font-size: clamp(26px, 8vw, 44px); letter-spacing: -1px; }
+      .hero-sub { font-size: 15px; }
+      .btn { padding: 12px 16px; font-size: 14px; }
+      .cta-group { flex-direction: column; align-items: center; gap: 10px; }
+      .cta-group .btn { width: 100%; max-width: 280px; justify-content: center; }
+      .features-header h2 { font-size: 24px; }
+      .feature-card { padding: 24px 20px; }
+    }
+
+    @media (max-width: 375px) {
+      h1 { font-size: 24px; }
+      .hero-sub { font-size: 14px; }
+    }
+
+    /* ─── LIGHTBOX ───────────────────────────────── */
+    #lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: rgba(0,0,0,0.88);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      align-items: center;
+      justify-content: center;
+    }
+
+    #lightbox.open { display: flex; }
+
+    #lightbox-img-wrap {
+      position: relative;
+      max-width: 320px;
+      width: 90vw;
+    }
+
+    #lightbox-img {
+      width: 100%;
+      border-radius: 28px;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.6);
+      display: block;
+    }
+
+    .lb-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.22);
+      color: #fff;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 20px;
+      transition: background 0.18s;
+      z-index: 1;
+      user-select: none;
+    }
+
+    .lb-btn:hover { background: rgba(255,255,255,0.22); }
+
+    #lb-prev { left: -56px; }
+    #lb-next { right: -56px; }
+
+    #lb-close {
+      position: fixed;
+      top: 20px;
+      right: 24px;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.22);
+      color: #fff;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 22px;
+      transition: background 0.18s;
+    }
+
+    #lb-close:hover { background: rgba(255,255,255,0.25); }
+
+    #lb-counter {
+      position: absolute;
+      bottom: -36px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255,255,255,0.6);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 600px) {
+      #lb-prev { left: -40px; }
+      #lb-next { right: -40px; }
+      .lb-btn { width: 36px; height: 36px; font-size: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ─── NAV ────────────────────────────── -->
+  <nav>
+    <div class="nav-inner">
+      <a href="#" class="logo">
+        <img src="logo.png" width="28" height="28" alt="Expedoo logo" style="border-radius:6px;vertical-align:middle;margin-right:8px;">
+        Expedoo
+      </a>
+    </div>
+  </nav>
+
+  <!-- ─── HERO ────────────────────────────── -->
+  <section id="hero">
+    <div class="container">
+      <div class="hero-inner">
+        <div class="hero-content">
+          <div class="hero-badge fade-up delay-1">Live in App Store &amp; Google Play</div>
+          <h1 class="fade-up delay-2">
+            Know your numbers.<br /><span>Every trip.</span>
+          </h1>
+          <p class="hero-sub fade-up delay-3">
+            Track trips, fuel, and earnings — built for expedited freight drivers.
+          </p>
+          <div class="cta-group fade-up delay-4">
+            <a href="https://apps.apple.com/app/expedoo-trip-fuel-tracker/id6759639615" class="btn btn-primary" aria-label="Download on App Store" target="_blank" rel="noopener">
+              <svg class="store-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+              </svg>
+              <span class="btn-store-label">
+                <span>Download on the</span>
+                <span>App Store</span>
+              </span>
+            </a>
+            <a href="#" class="btn btn-outline" aria-label="Get it on Google Play" style="opacity:0.55; cursor:not-allowed; pointer-events:none;">
+              <svg class="store-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M3.18 23.76c.3.17.64.24.99.2l12.6-7.28-2.66-2.66-10.93 9.74zM.22 1.55C.08 1.86 0 2.21 0 2.6V21.4c0 .39.08.74.22 1.04l.11.1 10.3-10.3v-.24L.33 1.45.22 1.55zM20.55 10.38l-2.8-1.62-2.97 2.97 2.97 2.97 2.82-1.63c.8-.46.8-1.22-.02-1.69zM4.17.24L16.77 7.5l-2.67 2.67L3.18.42c.3-.04.64.04.99.24v-.42z"/>
+              </svg>
+              <span class="btn-store-label">
+                <span>Get it on</span>
+                <span>Google Play</span>
+              </span>
+            <a href="https://expedoo.top" class="btn btn-outline" aria-label="Open Web App" target="_blank" rel="noopener">
+              <svg class="store-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="2" y1="12" x2="22" y2="12"/>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+              </svg>
+              <span class="btn-store-label">
+                <span>Open in</span>
+                <span>Browser</span>
+              </span>
+            </a>
+          </div>
+        </div>
+        <!-- Hero single-phone carousel -->
+        <div class="hero-carousel fade-up delay-5" id="hero-carousel">
+          <div class="carousel-phone-wrap">
+            <button class="carousel-arrow" id="carousel-prev" aria-label="Previous screenshot">&#8592;</button>
+            <div id="carousel-phone" tabindex="0" role="button" aria-label="View screenshot" style="cursor:pointer;">
+              <img id="carousel-img" src="mockup/stats.png" alt="App screenshot"
+                style="width:100%;max-width:300px;display:block;margin:0 auto;border-radius:0;" />
+            </div>
+            <button class="carousel-arrow" id="carousel-next" aria-label="Next screenshot">&#8594;</button>
+          </div>
+          <!-- Mobile-only arrows row (shown below phone on small screens) -->
+          <div class="carousel-arrows-row" aria-hidden="true">
+            <button class="carousel-arrow" id="carousel-prev-m" aria-label="Previous screenshot">&#8592;</button>
+            <button class="carousel-arrow" id="carousel-next-m" aria-label="Next screenshot">&#8594;</button>
+          </div>
+          <div class="carousel-dots" id="carousel-dots" aria-hidden="true"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── FEATURES ──────────────────────────── -->
+  <section id="features">
+    <div class="container">
+      <div class="features-header fade-up">
+        <h2>What's inside</h2>
+        <p>Every tool you need on the road, nothing you don't.</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card fade-up delay-1">
+          <div class="feature-icon">
+            <!-- Route / path icon: two dots connected by a curved line with arrow -->
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <circle cx="5" cy="22" r="2.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="23" cy="6" r="2.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M7 21C10 21 11 16 14 14C17 12 18 7 21 7" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M18.5 5.5L23 6L21.5 10.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="feature-divider"></div>
+          <h3>Trip Tracker</h3>
+          <p>Log gross, miles, profit and RPM for every trip.</p>
+        </div>
+        <div class="feature-card fade-up delay-2">
+          <div class="feature-icon">
+            <!-- Fuel pump / nozzle icon -->
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <rect x="4" y="8" width="12" height="16" rx="2" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M8 8V5C8 4.44772 8.44772 4 9 4H11C11.5523 4 12 4.44772 12 5V8" stroke="white" stroke-width="2" stroke-linecap="round"/>
+              <path d="M16 11L20 8V12" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M20 12V19C20 20.1046 20.8954 21 22 21V21C23.1046 21 24 20.1046 24 19V14C24 12.8954 23.1046 12 22 12H20Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <line x1="7" y1="13" x2="13" y2="13" stroke="white" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="feature-divider"></div>
+          <h3>Fuel Log</h3>
+          <p>Track every fill-up. Avg price, discounts, total spend.</p>
+        </div>
+        <div class="feature-card fade-up delay-3">
+          <div class="feature-icon">
+            <!-- Bar chart icon: 3 bars of different heights -->
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <rect x="4" y="14" width="5" height="10" rx="1.5" stroke="white" stroke-width="2"/>
+              <rect x="11.5" y="9" width="5" height="15" rx="1.5" stroke="white" stroke-width="2"/>
+              <rect x="19" y="5" width="5" height="19" rx="1.5" stroke="white" stroke-width="2"/>
+            </svg>
+          </div>
+          <div class="feature-divider"></div>
+          <h3>Stats</h3>
+          <p>Earnings, workload, fuel and load spots near you — all in one place</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── SCREENSHOTS ──────────────────────── -->
+  <section id="screenshots" style="display:none">
+    <div class="container">
+      <div class="screenshots-row">
+
+        <div class="phone-mockup">
+          <img src="mockup/trips.png" alt="Trips" style="width:100%;border-radius:24px;" />
+          <span class="phone-label">Trips</span>
+        </div>
+
+        <div class="phone-mockup">
+          <img src="mockup/stats.png" alt="Stats" style="width:100%;border-radius:24px;" />
+          <span class="phone-label">Stats</span>
+        </div>
+
+        <div class="phone-mockup">
+          <img src="mockup/fuel.png" alt="Fuel" style="width:100%;border-radius:24px;" />
+          <span class="phone-label">Fuel</span>
+        </div>
+
+        <div class="phone-mockup">
+          <img src="mockup/edit trip.png" alt="Edit Trip" style="width:100%;border-radius:24px;" />
+          <span class="phone-label">Edit Trip</span>
+        </div>
+
+        <div class="phone-mockup">
+          <img src="mockup/edit fuel.png" alt="Edit Fuel" style="width:100%;border-radius:24px;" />
+          <span class="phone-label">Edit Fuel</span>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── FOOTER ───────────────────────────── -->
+  <footer>
+    <div class="container">
+      <div class="footer-inner">
+        <a href="#" class="logo">
+          <img src="logo.png" width="28" height="28" alt="Expedoo logo" style="border-radius:6px;vertical-align:middle;margin-right:8px;">
+          Expedoo
+        </a>
+        <div class="footer-links">
+		  <a href="https://expedoo.top/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
+		  <a href="https://expedoo.top/terms" target="_blank" rel="noopener noreferrer">Terms of Use</a>
+		  <a href="https://expedoo.top/delete-account" target="_blank" rel="noopener noreferrer">Delete Account</a>
+		  <a href="https://expedoo.top/support" target="_blank" rel="noopener noreferrer">Support</a>
+		</div>
+        <p class="footer-copy">© 2026 Expedoo. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ─── LIGHTBOX ──────────────────────────── -->
+  <div id="lightbox" role="dialog" aria-modal="true" aria-label="Screenshot viewer">
+    <button id="lb-close" aria-label="Close">&times;</button>
+    <div id="lightbox-img-wrap">
+      <button class="lb-btn" id="lb-prev" aria-label="Previous">&#8592;</button>
+      <img id="lightbox-img" src="" alt="App screenshot" />
+      <button class="lb-btn" id="lb-next" aria-label="Next">&#8594;</button>
+      <div id="lb-counter"></div>
+    </div>
+  </div>
+
+  <script>
+    /* ─── HERO CAROUSEL + LIGHTBOX ─── */
+    (function () {
+      var images = [
+		{ src: 'mockup/stats.png',     alt: 'Stats' },
+        { src: 'mockup/trips.png',     alt: 'Trips' },
+        { src: 'mockup/fuel.png',      alt: 'Fuel' },
+        { src: 'mockup/edit trip.png', alt: 'Edit Trip' },
+        { src: 'mockup/edit fuel.png', alt: 'Edit Fuel' }
+      ];
+
+      var carouselImg = document.getElementById('carousel-img');
+      var carouselPhone = document.getElementById('carousel-phone');
+      var dotsContainer = document.getElementById('carousel-dots');
+
+      var dots = [];
+      var current = 0;
+
+      images.forEach(function (img, i) {
+        var dot = document.createElement('button');
+        dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+        dot.setAttribute('aria-label', 'Go to screenshot ' + (i + 1));
+        dotsContainer.appendChild(dot);
+        dots.push(dot);
+      });
+
+      function goTo(idx) {
+        dots[current].classList.remove('active');
+        current = (idx + images.length) % images.length;
+        carouselImg.src = images[current].src;
+        carouselImg.alt = images[current].alt;
+        dots[current].classList.add('active');
+      }
+
+      document.getElementById('carousel-prev').addEventListener('click', function () {
+        goTo(current - 1);
+      });
+      document.getElementById('carousel-next').addEventListener('click', function () {
+        goTo(current + 1);
+      });
+
+      /* Mobile duplicate arrows */
+      var prevM = document.getElementById('carousel-prev-m');
+      var nextM = document.getElementById('carousel-next-m');
+      if (prevM) prevM.addEventListener('click', function () { goTo(current - 1); });
+      if (nextM) nextM.addEventListener('click', function () { goTo(current + 1); });
+
+      dots.forEach(function (dot, i) {
+        dot.addEventListener('click', function () { goTo(i); });
+      });
+
+      /* ── Touch / Swipe support ── */
+      var touchStartX = 0;
+      var touchStartY = 0;
+      var isSwiping = false;
+
+      carouselPhone.addEventListener('touchstart', function (e) {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+        isSwiping = false;
+      }, { passive: true });
+
+      carouselPhone.addEventListener('touchmove', function (e) {
+        if (!isSwiping) {
+          var dx = Math.abs(e.touches[0].clientX - touchStartX);
+          var dy = Math.abs(e.touches[0].clientY - touchStartY);
+          if (dx > dy && dx > 8) {
+            isSwiping = true;
+          }
+        }
+        if (isSwiping) e.preventDefault();
+      }, { passive: false });
+
+      carouselPhone.addEventListener('touchend', function (e) {
+        if (!isSwiping) return;
+        var diff = touchStartX - e.changedTouches[0].clientX;
+        if (Math.abs(diff) > 40) {
+          goTo(diff > 0 ? current + 1 : current - 1);
+        }
+        isSwiping = false;
+      }, { passive: true });
+
+      /* ── Click phone → lightbox ── */
+      carouselPhone.addEventListener('click', function () { openLightbox(current); });
+      carouselPhone.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') openLightbox(current);
+      });
+
+      /* ─── LIGHTBOX ─── */
+      var lb = document.getElementById('lightbox');
+      var lbImg = document.getElementById('lightbox-img');
+      var lbCounter = document.getElementById('lb-counter');
+      var lbClose = document.getElementById('lb-close');
+      var lbPrev = document.getElementById('lb-prev');
+      var lbNext = document.getElementById('lb-next');
+      var lbCurrent = 0;
+
+      function openLightbox(idx) {
+        lbCurrent = idx;
+        updateLightbox();
+        lb.classList.add('open');
+        document.body.style.overflow = 'hidden';
+        lbClose.focus();
+      }
+
+      function closeLightbox() {
+        lb.classList.remove('open');
+        document.body.style.overflow = '';
+      }
+
+      function updateLightbox() {
+        lbImg.src = images[lbCurrent].src;
+        lbImg.alt = images[lbCurrent].alt;
+        lbCounter.textContent = (lbCurrent + 1) + ' / ' + images.length;
+      }
+
+      function lbPrevSlide() { lbCurrent = (lbCurrent - 1 + images.length) % images.length; updateLightbox(); }
+      function lbNextSlide() { lbCurrent = (lbCurrent + 1) % images.length; updateLightbox(); }
+
+      lbClose.addEventListener('click', closeLightbox);
+      lbPrev.addEventListener('click', lbPrevSlide);
+      lbNext.addEventListener('click', lbNextSlide);
+      lb.addEventListener('click', function (e) { if (e.target === lb) closeLightbox(); });
+
+      /* Lightbox touch swipe */
+      var lbTouchX = 0;
+      lb.addEventListener('touchstart', function(e) { lbTouchX = e.touches[0].clientX; }, { passive: true });
+      lb.addEventListener('touchend', function(e) {
+        var diff = lbTouchX - e.changedTouches[0].clientX;
+        if (Math.abs(diff) > 40) { diff > 0 ? lbNextSlide() : lbPrevSlide(); }
+      }, { passive: true });
+
+      document.addEventListener('keydown', function (e) {
+        if (!lb.classList.contains('open')) return;
+        if (e.key === 'Escape') closeLightbox();
+        if (e.key === 'ArrowLeft') lbPrevSlide();
+        if (e.key === 'ArrowRight') lbNextSlide();
+      });
+    })();
+
+    /* ─── INTERSECTION OBSERVER — SCROLL FADE ─── */
+    (function () {
+      var sections = document.querySelectorAll('#features, footer');
+      sections.forEach(function (el) { el.classList.add('reveal'); });
+
+      if ('IntersectionObserver' in window) {
+        var io = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('visible');
+              io.unobserve(entry.target);
+            }
+          });
+        }, { threshold: 0.08 });
+
+        sections.forEach(function (el) { io.observe(el); });
+      } else {
+        sections.forEach(function (el) { el.classList.add('visible'); });
+      }
+    })();
+  </script>
+
+</body>
+</html>
