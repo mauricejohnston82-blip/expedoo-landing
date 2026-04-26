@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Expedoo — Freight Driver App</title>
+  <link rel="icon" href="logo.png">
+  <meta name="description" content="Expedoo — Track trips, fuel, and earnings. Built for expedited freight drivers in the USA." />
+  <meta property="og:title" content="Expedoo — Freight Driver App" />
+  <meta property="og:description" content="Know your numbers. Every trip." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  </style>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #F0F2F5;
+      --accent: #2563EB;
+      --accent-light: #3B82F6;
+      --accent-glow: rgba(37,99,235,0.25);
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --card-bg: rgba(255,255,255,0.55);
+      --card-border: rgba(255,255,255,0.8);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
+    /* ── ANIMATED GRADIENT MESH ── */
+    .mesh-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .mesh-bg::before,
+    .mesh-bg::after {
+      content: '';
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: 0.35;
+      animation: meshFloat 12s ease-in-out infinite alternate;
+    }
+    .mesh-bg::before {
+      width: 700px; height: 700px;
+      background: radial-gradient(circle, #93c5fd, #2563eb, transparent 70%);
+      top: -200px; right: -100px;
+    }
+    .mesh-bg::after {
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, #bfdbfe, #60a5fa, transparent 70%);
+      bottom: 10%; left: -150px;
+      animation-delay: -6s;
+    }
+    @keyframes meshFloat {
+      0%   { transform: translate(0,0) scale(1); }
+      100% { transform: translate(40px, 60px) scale(1.08); }
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 48px;
+      height: 64px;
+      background: rgba(240,242,245,0.75);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(255,255,255,0.6);
+    }
+    .logo {
+      display: flex; align-items: center; gap: 10px;
+      font-family: 'Sora', sans-serif;
+      font-weight: 800; font-size: 20px;
+      color: var(--text);
+      text-decoration: none;
+      letter-spacing: -0.5px;
+    }
+    .logo-icon {
+      width: 36px; height: 36px;
+      background: var(--accent);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .logo-icon svg { width: 20px; height: 20px; fill: white; }
+
+    .nav-links {
+      display: flex; align-items: center; gap: 32px;
+      list-style: none;
+    }
+    .nav-links a {
+      font-size: 14px; font-weight: 500;
+      color: var(--text-muted); text-decoration: none;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--text); }
+
+    .nav-cta {
+      background: var(--accent); color: white;
+      border: none; border-radius: 8px;
+      padding: 8px 20px; font-size: 14px; font-weight: 600;
+      cursor: pointer; font-family: 'DM Sans', sans-serif;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .nav-cta:hover { background: #1d4ed8; transform: translateY(-1px); }
+
+    /* ── SECTIONS WRAPPER ── */
+    main { position: relative; z-index: 1; }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: calc(100vh - 64px);
+      display: flex; align-items: center;
+      padding: 80px 48px 80px;
+      max-width: 1240px; margin: 0 auto;
+      gap: 64px;
+    }
+    .hero-left { flex: 1; max-width: 560px; }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(37,99,235,0.08);
+      border: 1px solid rgba(37,99,235,0.2);
+      border-radius: 100px;
+      padding: 5px 14px 5px 10px;
+      font-size: 12px; font-weight: 600;
+      color: var(--accent); margin-bottom: 28px;
+      letter-spacing: 0.4px;
+    }
+    .hero-badge-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--accent);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    .hero h1 {
+      font-family: 'Sora', sans-serif;
+      font-weight: 800; font-size: clamp(42px, 5vw, 64px);
+      line-height: 1.05; letter-spacing: -2px;
+      color: var(--text); margin-bottom: 22px;
+    }
+    .hero h1 em { font-style: normal; color: var(--accent); }
+
+    .hero-sub {
+      font-size: 18px; line-height: 1.65;
+      color: var(--text-muted); margin-bottom: 40px;
+      max-width: 440px; font-weight: 400;
+    }
+
+    .hero-ctas {
+      display: flex; align-items: center; gap: 14px;
+      flex-wrap: wrap; margin-bottom: 24px;
+    }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: var(--accent); color: white;
+      border: none; border-radius: 12px;
+      padding: 14px 26px; font-size: 15px; font-weight: 600;
+      cursor: pointer; font-family: 'DM Sans', sans-serif;
+      text-decoration: none;
+      box-shadow: 0 4px 24px rgba(37,99,235,0.35);
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+    }
+    .btn-primary:hover {
+      background: #1d4ed8;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(37,99,235,0.45);
+    }
+    .btn-primary svg { width: 18px; height: 18px; fill: white; flex-shrink: 0; }
+
+    .btn-outline {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: transparent; color: var(--text);
+      border: 1.5px solid rgba(15,23,42,0.2); border-radius: 12px;
+      padding: 14px 26px; font-size: 15px; font-weight: 600;
+      cursor: pointer; font-family: 'DM Sans', sans-serif;
+      text-decoration: none;
+      transition: border-color 0.2s, transform 0.15s, background 0.2s;
+    }
+    .btn-outline:hover {
+      border-color: var(--accent); color: var(--accent);
+      background: rgba(37,99,235,0.04);
+      transform: translateY(-2px);
+    }
+    .btn-outline svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+    .hero-fine {
+      font-size: 13px; color: var(--text-muted);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .hero-fine::before {
+      content: '';
+      width: 16px; height: 16px; flex-shrink: 0;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2322c55e'%3E%3Cpath d='M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'/%3E%3C/svg%3E") center/contain no-repeat;
+    }
+
+    /* ── PHONE MOCKUP ── */
+    .hero-right {
+      flex: 1; display: flex;
+      justify-content: center; align-items: center;
+      position: relative; min-height: 620px;
+    }
+    .phone-glow {
+      position: absolute;
+      width: 380px; height: 480px;
+      background: radial-gradient(ellipse at center, rgba(37,99,235,0.5) 0%, rgba(96,165,250,0.2) 50%, transparent 75%);
+      border-radius: 50%;
+      filter: blur(40px);
+      z-index: 0;
+    }
+    .phone-wrap {
+      position: relative; z-index: 1;
+      animation: phoneFloat 4s ease-in-out infinite;
+    }
+    @keyframes phoneFloat {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-14px); }
+    }
+
+    /* iPhone shell */
+    .iphone-shell {
+      width: 288px;
+      background: linear-gradient(160deg, #e8eaed 0%, #d0d3d8 40%, #c8ccd2 100%);
+      border-radius: 50px;
+      padding: 10px;
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.85) inset,
+        0 0 0 1.5px rgba(0,0,0,0.13),
+        0 36px 90px rgba(0,0,0,0.25),
+        0 8px 24px rgba(0,0,0,0.14);
+      position: relative;
+    }
+    /* Dynamic island */
+    .iphone-shell::before {
+      content: '';
+      position: absolute;
+      top: 18px; left: 50%; transform: translateX(-50%);
+      width: 88px; height: 26px;
+      background: #111;
+      border-radius: 20px;
+      z-index: 20;
+    }
+    .iphone-screen {
+      width: 100%;
+      border-radius: 42px;
+      overflow: hidden;
+      background: #f2f2f7;
+      aspect-ratio: 9/19.5;
+      position: relative;
+    }
+
+    /* Carousel inside phone */
+    .carousel-track {
+      display: flex;
+      width: 500%;
+      height: 100%;
+      transition: transform 0.4s cubic-bezier(0.4,0,0.2,1);
+    }
+    .carousel-slide {
+      width: 20%;
+      height: 100%;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .carousel-slide img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top;
+      display: block;
+    }
+
+    /* Arrow buttons */
+    .carousel-btn {
+      position: absolute;
+      top: 50%; transform: translateY(-50%);
+      width: 32px; height: 32px;
+      background: rgba(255,255,255,0.92);
+      border: 1px solid rgba(0,0,0,0.1);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; z-index: 30;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      transition: background 0.2s, transform 0.2s;
+      backdrop-filter: blur(8px);
+    }
+    .carousel-btn:hover { background: white; transform: translateY(-50%) scale(1.1); }
+    .carousel-btn svg { width: 14px; height: 14px; stroke: #1e293b; fill: none; stroke-width: 2.5; }
+    .carousel-btn.prev { left: -18px; }
+    .carousel-btn.next { right: -18px; }
+
+    /* Dots */
+    .carousel-dots {
+      position: absolute;
+      bottom: -28px; left: 50%; transform: translateX(-50%);
+      display: flex; gap: 6px; align-items: center;
+    }
+    .carousel-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: rgba(37,99,235,0.25);
+      cursor: pointer;
+      transition: background 0.2s, transform 0.2s;
+    }
+    .carousel-dot.active {
+      background: var(--accent);
+      transform: scale(1.3);
+    }
+
+    /* ── SCROLL REVEAL ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── FEATURES ── */
+    .features {
+      padding: 100px 48px;
+      max-width: 1240px; margin: 0 auto;
+    }
+    .section-tag {
+      text-align: center;
+      font-size: 12px; font-weight: 700;
+      color: var(--accent); text-transform: uppercase;
+      letter-spacing: 1.5px; margin-bottom: 16px;
+    }
+    .section-title {
+      font-family: 'Sora', sans-serif;
+      font-weight: 800; font-size: clamp(30px, 4vw, 44px);
+      text-align: center; letter-spacing: -1.5px;
+      line-height: 1.1; margin-bottom: 16px;
+    }
+    .section-sub {
+      text-align: center; color: var(--text-muted);
+      font-size: 17px; max-width: 500px;
+      margin: 0 auto 64px; line-height: 1.65;
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    .feature-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 32px;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      transition: transform 0.25s, box-shadow 0.25s;
+      position: relative; overflow: hidden;
+    }
+    .feature-card::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.35) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .feature-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.1), 0 4px 12px rgba(37,99,235,0.08);
+    }
+    .feature-icon {
+      width: 52px; height: 52px; border-radius: 14px;
+      background: linear-gradient(135deg, var(--accent), #60a5fa);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 22px;
+      box-shadow: 0 4px 16px rgba(37,99,235,0.35);
+    }
+    .feature-icon svg { width: 26px; height: 26px; fill: white; }
+    .feature-name {
+      font-family: 'Sora', sans-serif;
+      font-weight: 700; font-size: 18px;
+      margin-bottom: 10px; letter-spacing: -0.3px;
+    }
+    .feature-desc { font-size: 14px; color: var(--text-muted); line-height: 1.65; }
+
+    /* ── STATS BANNER ── */
+    .stats-banner {
+      max-width: 1240px; margin: 0 auto;
+      padding: 0 48px 100px;
+      display: grid; grid-template-columns: repeat(3,1fr);
+      gap: 24px;
+    }
+    .stat-tile {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px; padding: 32px;
+      backdrop-filter: blur(20px);
+      text-align: center;
+    }
+    .stat-tile-num {
+      font-family: 'Sora', sans-serif;
+      font-weight: 800; font-size: 42px;
+      letter-spacing: -2px; color: var(--accent);
+      margin-bottom: 6px;
+    }
+    .stat-tile-label { font-size: 14px; color: var(--text-muted); }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid rgba(0,0,0,0.07);
+      padding: 32px 48px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: relative; z-index: 1;
+    }
+    .footer-logo {
+      font-family: 'Sora', sans-serif;
+      font-weight: 800; font-size: 16px;
+      color: var(--text); display: flex; align-items: center; gap: 8px;
+    }
+    .footer-logo .logo-icon { width: 28px; height: 28px; border-radius: 8px; }
+    .footer-logo .logo-icon svg { width: 15px; height: 15px; }
+    .footer-links { display: flex; gap: 24px; align-items: center; }
+    .footer-links a {
+      font-size: 13px; color: var(--text-muted); text-decoration: none;
+      transition: color 0.2s;
+    }
+    .footer-links a:hover { color: var(--text); }
+    .footer-copy { font-size: 13px; color: var(--text-muted); }
+
+    /* ── RESPONSIVE ── */
+
+    /* Tablet: 768–1024px */
+    @media (max-width: 1024px) {
+      .hero { gap: 40px; padding: 60px 32px; }
+      .hero h1 { font-size: 44px; }
+      .hero-sub { font-size: 16px; }
+      .features { padding: 80px 32px; }
+      .stats-banner { padding: 0 32px 80px; }
+    }
+
+    /* Tablet compressed: 768–900px — two columns still */
+    @media (max-width: 900px) and (min-width: 640px) {
+      nav { padding: 0 24px; }
+      .hero { padding: 48px 24px; gap: 32px; }
+      .hero h1 { font-size: 36px; letter-spacing: -1px; }
+      .hero-sub { font-size: 15px; }
+      .hero-right { min-height: unset; }
+      .features { padding: 60px 24px; }
+      .features-grid { grid-template-columns: 1fr; }
+      .stats-banner { grid-template-columns: 1fr 1fr; padding: 0 24px 60px; gap: 16px; }
+      footer { flex-wrap: wrap; gap: 12px; padding: 24px; }
+    }
+
+    /* Mobile: up to 639px — single column */
+    @media (max-width: 639px) {
+      nav {
+        padding: 0 16px;
+        padding-left: max(16px, env(safe-area-inset-left));
+        padding-right: max(16px, env(safe-area-inset-right));
+      }
+      .nav-links { display: none; }
+      .nav-cta { padding: 7px 14px; font-size: 13px; }
+
+      .hero {
+        flex-direction: column;
+        padding: 40px 20px 60px;
+        padding-left: max(20px, env(safe-area-inset-left));
+        padding-right: max(20px, env(safe-area-inset-right));
+        text-align: center;
+        gap: 40px;
+        min-height: unset;
+      }
+      .hero-left { max-width: 100%; }
+      .hero h1 { font-size: 36px; letter-spacing: -1px; }
+      .hero-sub { font-size: 15px; margin-bottom: 28px; max-width: 100%; }
+      .hero-badge { font-size: 11px; }
+
+      .hero-ctas {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+      }
+      .btn-primary, .btn-outline {
+        justify-content: center;
+        width: 100%;
+        padding: 15px 20px;
+        font-size: 15px;
+      }
+      .hero-fine { justify-content: center; }
+
+      .hero-right {
+        min-height: unset;
+        width: 100%;
+        justify-content: center;
+      }
+      /* Shrink carousel on mobile */
+      #carousel { width: 260px !important; }
+      #carouselTrack .c-slide,
+      #carouselTrack img { width: 260px !important; min-width: 260px !important; }
+      .carousel-btn.prev { left: -16px !important; }
+      .carousel-btn.next { right: -16px !important; }
+      .phone-glow { width: 260px; height: 320px; }
+
+      .features {
+        padding: 60px 20px;
+        padding-left: max(20px, env(safe-area-inset-left));
+        padding-right: max(20px, env(safe-area-inset-right));
+      }
+      .section-title { font-size: 28px; }
+      .section-sub { font-size: 15px; }
+      .features-grid { grid-template-columns: 1fr; gap: 16px; }
+      .feature-card { padding: 24px; }
+
+      .stats-banner {
+        grid-template-columns: 1fr;
+        padding: 0 20px 60px;
+        padding-left: max(20px, env(safe-area-inset-left));
+        padding-right: max(20px, env(safe-area-inset-right));
+        gap: 16px;
+      }
+      .stat-tile-num { font-size: 36px; }
+
+      footer {
+        flex-direction: column;
+        gap: 16px;
+        text-align: center;
+        padding: 24px 20px;
+        padding-bottom: max(24px, env(safe-area-inset-bottom));
+      }
+      .footer-links { flex-wrap: wrap; justify-content: center; gap: 16px; }
+    }
+
+
+    /* Page fade-in */
+    body { opacity: 0; transition: opacity 0.5s ease; }
+    body.loaded { opacity: 1; }
+    /* Prevent horizontal overflow globally */
+    html, body { max-width: 100%; overflow-x: hidden; }
+  </style>
+  
+  <!-- Meta Pixel Code -->
+  <script>
+  !function(f,b,e,v,n,t,s)
+  {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+  if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+  n.queue=[];t=b.createElement(e);t.async=!0;
+  t.src=v;s=b.getElementsByTagName(e)[0];
+  s.parentNode.insertBefore(t,s)}(window, document,'script',
+  'https://connect.facebook.net/en_US/fbevents.js');
+  fbq('init', '1503292694479946');
+  fbq('track', 'PageView');
+  fbq('track', 'ViewContent');
+  </script>
+  <noscript><img height="1" width="1" style="display:none"
+  src="https://www.facebook.com/tr?id=1503292694479946&ev=PageView&noscript=1"
+  /></noscript>
+  <!-- End Meta Pixel Code -->
+</head>
+<body>
+
+  <!-- Animated mesh -->
+  <div class="mesh-bg" aria-hidden="true"></div>
+
+  <main>
+    <!-- ── NAV ── -->
+    <nav>
+      <a href="#" class="logo">
+        <img src="logo.png" width="32" height="32" alt="Expedoo logo" style="border-radius:8px;">
+        Expedoo
+      </a>
+      <ul class="nav-links">
+        <li><a href="#features">Features</a></li>
+        <li><a href="#stats">Stats</a></li>
+        <li><a href="#hero-ctas">Download</a></li>
+      </ul>
+      <a href="https://apps.apple.com/app/expedoo-trip-fuel-tracker/id6759639615" class="nav-cta" onclick="fbq('track', 'InitiateCheckout', {content_name: 'AppStore'})" target="_blank" rel="noopener" style="text-decoration:none;">App Store</a>
+    </nav>
+
+    <!-- ── HERO ── -->
+    <section class="hero">
+      <div class="hero-left reveal">
+        <div class="hero-badge">
+          <span class="hero-badge-dot"></span>
+          Built for owner-operators
+        </div>
+        <h1>Know your numbers.<br><em>Every trip.</em></h1>
+        <p class="hero-sub">Track trips, fuel, and real profit. Built for owner-operators who need clarity, not complexity.</p>
+        <div class="hero-ctas" id="hero-ctas">
+          <a href="https://apps.apple.com/app/expedoo-trip-fuel-tracker/id6759639615" class="btn-primary" onclick="fbq('track', 'InitiateCheckout', {content_name: 'AppStore'})" target="_blank" rel="noopener">
+            <svg style="width:20px;height:20px;flex-shrink:0;fill:white;" viewBox="0 0 24 24"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+            <span style="display:flex;flex-direction:column;line-height:1.1;">
+              <span style="font-size:10px;font-weight:400;opacity:0.8;text-transform:uppercase;letter-spacing:0.5px;">Download on the</span>
+              <span style="font-size:15px;font-weight:700;">App Store</span>
+            </span>
+          </a>
+          <a href="https://expedoo.top" class="btn-outline" onclick="fbq('track', 'CompleteRegistration', {content_name: 'WebApp'})" target="_blank" rel="noopener">
+            <svg style="width:20px;height:20px;flex-shrink:0;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+            <span style="display:flex;flex-direction:column;line-height:1.1;">
+              <span style="font-size:10px;font-weight:400;opacity:0.8;text-transform:uppercase;letter-spacing:0.5px;">Open in</span>
+              <span style="font-size:15px;font-weight:700;">Web App</span>
+            </span>
+          </a>
+        </div>
+        <p class="hero-fine">Free. No setup. Start in 1 minute.</p>
+      </div>
+
+      <div class="hero-right reveal" style="transition-delay:0.2s">
+        <div class="phone-glow"></div>
+        <div class="phone-wrap" style="position:relative; display:flex; align-items:center; justify-content:center;">
+          <!-- Arrows outside the clipping container -->
+          <button class="carousel-btn prev" id="carouselPrev" aria-label="Previous" style="position:absolute; left:-24px; top:50%; transform:translateY(-50%); z-index:30;">
+            <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          </button>
+          <button class="carousel-btn next" id="carouselNext" aria-label="Next" style="position:absolute; right:-24px; top:50%; transform:translateY(-50%); z-index:30;">
+            <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          </button>
+
+          <div style="display:flex; flex-direction:column; align-items:center; gap:24px;">
+            <div id="carousel" style="width:300px; position:relative;">
+              <div id="carouselTrack" style="position:relative; width:100%;">
+                <img class="c-slide" src="mockup/stats.png" alt="Stats" style="width:100%; display:block; position:relative; opacity:1; transition:opacity 0.4s ease;">
+                <img class="c-slide" src="mockup/trips.png" alt="Trips" style="width:100%; display:block; position:absolute; top:0; left:0; width:100%; opacity:0; transition:opacity 0.4s ease;">
+                <img class="c-slide" src="mockup/fuel.png" alt="Fuel" style="width:100%; display:block; position:absolute; top:0; left:0; width:100%; opacity:0; transition:opacity 0.4s ease;">
+                <img class="c-slide" src="mockup/edit trip.png" alt="Edit Trip" style="width:100%; display:block; position:absolute; top:0; left:0; width:100%; opacity:0; transition:opacity 0.4s ease;">
+                <img class="c-slide" src="mockup/edit fuel.png" alt="Edit Fuel" style="width:100%; display:block; position:absolute; top:0; left:0; width:100%; opacity:0; transition:opacity 0.4s ease;">
+              </div>
+            </div>
+            <div id="carouselDots" style="display:flex; gap:8px; align-items:center;">
+              <div class="carousel-dot active" data-idx="0"></div>
+              <div class="carousel-dot" data-idx="1"></div>
+              <div class="carousel-dot" data-idx="2"></div>
+              <div class="carousel-dot" data-idx="3"></div>
+              <div class="carousel-dot" data-idx="4"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── FEATURES ── -->
+    <section class="features" id="features">
+      <div class="reveal">
+        <p class="section-tag">Everything you need</p>
+        <h2 class="section-title">Built around your workflow</h2>
+        <p class="section-sub">Stop guessing. Start knowing. Every number that matters, tracked in seconds.</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card reveal" style="transition-delay:0.1s">
+          <div style="width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,#1D4ED8 0%,#3B82F6 100%);box-shadow:0 4px 16px rgba(29,78,216,0.45);display:flex;align-items:center;justify-content:center;margin-bottom:16px;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="3"></circle><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"></path><circle cx="18" cy="5" r="3"></circle></svg></div>
+          <div class="feature-name">Trip Tracker</div>
+          <div class="feature-desc">Gross, miles, profit, RPM — every trip logged in seconds. See your real numbers, not estimates.</div>
+        </div>
+        <div class="feature-card reveal" style="transition-delay:0.2s">
+          <div style="width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,#1D4ED8 0%,#3B82F6 100%);box-shadow:0 4px 16px rgba(29,78,216,0.45);display:flex;align-items:center;justify-content:center;margin-bottom:16px;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 13h2a2 2 0 0 1 2 2v2a2 2 0 0 0 4 0v-6.998a2 2 0 0 0-.59-1.42L18 5"></path><path d="M14 21V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v16"></path><path d="M2 21h13"></path><path d="M3 9h11"></path></svg></div>
+          <div class="feature-name">Fuel Log</div>
+          <div class="feature-desc">Every fill-up, captured. Average price, discounts applied, total spend — all in one timeline.</div>
+        </div>
+        <div class="feature-card reveal" style="transition-delay:0.3s">
+          <div style="width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,#1D4ED8 0%,#3B82F6 100%);box-shadow:0 4px 16px rgba(29,78,216,0.45);display:flex;align-items:center;justify-content:center;margin-bottom:16px;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h2v7H3z"></path><path d="M9 5h2v14H9z"></path><path d="M15 8h2v11h-2z"></path><path d="M21 3h2v16h-2z"></path></svg></div>
+          <div class="feature-name">Stats</div>
+          <div class="feature-desc">Profit, workload, fuel, load spots — all in one place. Spot trends before they become problems.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── STATS TILES ── -->
+    <section class="stats-banner" id="stats">
+      <div class="stat-tile reveal">
+        <div class="stat-tile-num" data-target="56820" data-prefix="$" data-format="dollar">$0</div>
+        <div class="stat-tile-label">Avg. annual gross tracked per user</div>
+      </div>
+      <div class="stat-tile reveal" style="transition-delay:0.1s">
+        <div class="stat-tile-num" data-target="1.46" data-prefix="$" data-suffix="/mi" data-format="rpm">$0/mi</div>
+        <div class="stat-tile-label">Average revenue per mile</div>
+      </div>
+      <div class="stat-tile reveal" style="transition-delay:0.2s">
+        <div class="stat-tile-num" data-target="43615" data-prefix="$" data-format="dollar">$0</div>
+        <div class="stat-tile-label">Avg. net profit tracked per user</div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ── FOOTER ── -->
+  <footer>
+    <div class="footer-logo">
+      <img src="logo.png" width="28" height="28" alt="Expedoo logo" style="border-radius:6px;">
+      Expedoo
+    </div>
+    <div class="footer-links">
+      <a href="https://expedoo.top/privacy" target="_blank" rel="noopener">Privacy Policy</a>
+      <a href="https://expedoo.top/terms" target="_blank" rel="noopener">Terms of Use</a>
+      <a href="https://expedoo.top/support" target="_blank" rel="noopener">Support</a>
+    </div>
+    <p class="footer-copy">© 2026 Expedoo</p>
+  </footer>
+
+  <script>
+        // Page fade-in
+    window.addEventListener('load', function() {
+      document.body.classList.add('loaded');
+    });
+
+    // ── SCROLL REVEAL ──
+    const revealEls = document.querySelectorAll('.reveal');
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          revealObserver.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0, rootMargin: '0px 0px -40px 0px' });
+
+    // Trigger immediately (no transition) for elements already in viewport
+    function initReveal() {
+      revealEls.forEach(el => {
+        const rect = el.getBoundingClientRect();
+        if (rect.top < window.innerHeight) {
+          el.style.transition = 'none';
+          el.classList.add('visible');
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => { el.style.transition = ''; });
+          });
+        } else {
+          revealObserver.observe(el);
+        }
+      });
+    }
+    initReveal();
+
+    // ── CAROUSEL ──
+    (function() {
+      const slides = document.querySelectorAll('.c-slide');
+      const dots = document.querySelectorAll('.carousel-dot');
+      const prev = document.getElementById('carouselPrev');
+      const next = document.getElementById('carouselNext');
+      let current = 0;
+      const total = 5;
+
+      function goTo(idx) {
+        slides[current].style.opacity = '0';
+        slides[current].style.position = 'absolute';
+        current = (idx + total) % total;
+        slides.forEach((s, i) => {
+          if (i === current) {
+            s.style.opacity = '1';
+            s.style.position = 'relative';
+          } else {
+            s.style.opacity = '0';
+            s.style.position = 'absolute';
+          }
+        });
+        dots.forEach((d, i) => d.classList.toggle('active', i === current));
+      }
+
+      prev.addEventListener('click', () => goTo(current - 1));
+      next.addEventListener('click', () => goTo(current + 1));
+      dots.forEach(d => d.addEventListener('click', () => goTo(+d.dataset.idx)));
+
+      // Touch/swipe
+      let startX = 0;
+      const carouselEl = document.getElementById('carousel');
+      carouselEl.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
+      carouselEl.addEventListener('touchend', e => {
+        const diff = startX - e.changedTouches[0].clientX;
+        if (Math.abs(diff) > 30) goTo(diff > 0 ? current + 1 : current - 1);
+      });
+
+      // Auto-advance
+      setInterval(() => goTo(current + 1), 4000);
+    })();
+
+    // ── ANIMATED NUMBER COUNTER ──
+    function animateNumber(el) {
+      const target = parseFloat(el.dataset.target);
+      const prefix = el.dataset.prefix || '';
+      const suffix = el.dataset.suffix || '';
+      const format = el.dataset.format || 'dollar';
+      const duration = 1800;
+      const start = performance.now();
+
+      function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+
+      function tick(now) {
+        const elapsed = now - start;
+        const progress = Math.min(elapsed / duration, 1);
+        const val = easeOut(progress) * target;
+
+        if (format === 'dollar') {
+          el.textContent = prefix + Math.floor(val).toLocaleString();
+        } else if (format === 'rpm') {
+          el.textContent = prefix + val.toFixed(2) + suffix;
+        }
+
+        if (progress < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    }
+
+    const statEls = document.querySelectorAll('[data-target]');
+    const statObserver = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          animateNumber(e.target);
+          statObserver.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.5 });
+    statEls.forEach(el => statObserver.observe(el));
+  </script>
+
+
+
+</body></html>
