@@ -669,11 +669,16 @@
       <a id="nav-smart-cta" href="#" class="nav-cta" target="_blank" rel="noopener" style="text-decoration:none;">Get the App</a>
     <script>
     (function() {
-      var ios = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      var ua = navigator.userAgent;
+      var ios = /iPad|iPhone|iPod/.test(ua);
+      var android = /Android/.test(ua);
       var el = document.getElementById('nav-smart-cta');
       if (ios) {
         el.href = 'https://apps.apple.com/app/expedoo-trip-fuel-tracker/id6759639615';
         el.onclick = function(){ fbq('track','InitiateCheckout',{content_name:'AppStore'}); };
+      } else if (android) {
+        el.href = 'https://play.google.com/store/apps/details?id=com.base6a05103b78b8d2b2508609af.app';
+        el.onclick = function(){ fbq('track','InitiateCheckout',{content_name:'GooglePlay'}); };
       } else {
         el.href = 'https://expedoo.top';
         el.onclick = function(){ fbq('track','CompleteRegistration',{content_name:'WebApp'}); };
