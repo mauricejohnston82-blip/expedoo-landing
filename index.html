@@ -168,6 +168,12 @@
       flex-shrink: 0;
     }
 
+    .store-icon-play {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+
     .btn-store-label {
       display: flex;
       flex-direction: column;
@@ -438,7 +444,18 @@
       }
       .hero-content { max-width: 100%; }
       .hero-sub { max-width: 100% !important; }
-      .cta-group { justify-content: center; }
+      .cta-group {
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: center;
+      }
+      .cta-group .btn {
+        width: 100%;
+        max-width: 320px;
+        margin-left: auto;
+        margin-right: auto;
+        justify-content: center;
+      }
       .hero-carousel { margin: 40px auto 0; width: 100%; }
     }
 
@@ -714,8 +731,8 @@
       h1 { font-size: clamp(26px, 8vw, 44px); letter-spacing: -1px; }
       .hero-sub { font-size: 15px; }
       .btn { padding: 12px 16px; font-size: 14px; }
-      .cta-group { flex-direction: column; align-items: center; gap: 10px; }
-      .cta-group .btn { width: 100%; max-width: 280px; justify-content: center; }
+      .cta-group { gap: 10px; }
+      .cta-group .btn { max-width: none; }
       .features-header h2 { font-size: 24px; }
       .feature-card { padding: 24px 20px; }
     }
@@ -868,7 +885,19 @@
                 <span>App Store</span>
               </span>
             </a>
-<a href="https://expedoo.top" class="btn btn-outline" onclick="fbq('track', 'CompleteRegistration', {content_name: 'WebApp'})" aria-label="Open Web App" target="_blank" rel="noopener">
+            <a href="https://play.google.com/store/apps/details?id=com.base6a05103b78b8d2b2508609af.app" class="btn btn-primary" onclick="fbq('track', 'InitiateCheckout', {content_name: 'GooglePlay'})" aria-label="Get it on Google Play" target="_blank" rel="noopener">
+              <svg class="store-icon-play" viewBox="0 0 24 24" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+                <path fill="#EA4335" d="M3.609 1.814L13.792 12 3.61 22.186a1.969 1.969 0 0 1-.357-.523V2.337c.12-.2.22-.37.356-.523z"/>
+                <path fill="#FBBC04" d="M16.272 12.727l-2.48-2.48-10.183 10.18a1.969 1.969 0 0 0 1.12.418l11.543-8.118z"/>
+                <path fill="#4285F4" d="M21.998 11.336c.164.98.164 2.01 0 3.01l-5.726 3.328-2.998-2.998 2.48-2.48 6.244-3.62z"/>
+                <path fill="#34A853" d="M3.609 1.814l10.183 10.186L16.272 9.52 21.998 5.69c.336-.195.68-.336 1.003-.414L3.252 1.4c-.323.078-.667.22-1.003.414z"/>
+              </svg>
+              <span class="btn-store-label">
+                <span>Get it on</span>
+                <span>Google Play</span>
+              </span>
+            </a>
+            <a href="https://expedoo.top" class="btn btn-outline" onclick="fbq('track', 'CompleteRegistration', {content_name: 'WebApp'})" aria-label="Open Web App" target="_blank" rel="noopener">
               <svg class="store-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <circle cx="12" cy="12" r="10"/>
                 <line x1="2" y1="12" x2="22" y2="12"/>
