@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Get Expedoo</title>
+  <link rel="icon" href="logo.png">
+  <meta name="robots" content="noindex">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@700;800&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--accent:#2563EB;--text:#0f172a;--muted:#64748b;--bg:#F0F2F5}
+    html,body{height:100%}
+    body{
+      font-family:'DM Sans',-apple-system,'Segoe UI',Arial,sans-serif;
+      background:
+        radial-gradient(rgba(37,99,235,.14) 1.3px,transparent 1.5px) 0 0/44px 44px,
+        linear-gradient(118deg,#EFF4FB 0%,#E6EFF8 55%,#DEE9F6 100%);
+      color:var(--text);display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;
+    }
+    .wrap{max-width:360px}
+    .logo{width:76px;height:76px;border-radius:20px;box-shadow:0 14px 34px rgba(20,50,110,.28);margin-bottom:24px}
+    .title{font-family:'Sora',sans-serif;font-weight:800;font-size:24px;letter-spacing:-.5px;margin-bottom:10px}
+    .title em{font-style:normal;color:var(--accent)}
+    .sub{font-size:15px;color:var(--muted);line-height:1.5;margin-bottom:26px}
+    .spinner{width:34px;height:34px;margin:0 auto 26px;border:3px solid rgba(37,99,235,.2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @media (prefers-reduced-motion: reduce){.spinner{animation:none}}
+    .fallback{font-size:14px;color:var(--muted)}
+    .fallback a{color:var(--accent);font-weight:600;text-decoration:none}
+    .fallback a:hover{text-decoration:underline}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <img src="logo.png" class="logo" alt="Expedoo">
+    <div class="title">Opening <em>Expedoo</em>…</div>
+    <div class="sub">Taking you to the right store for your device.</div>
+    <div class="spinner" aria-hidden="true"></div>
+    <div class="fallback">Not redirected automatically?<br><a id="manual" href="index.html">Tap here to continue</a></div>
+  </div>
+
+  <script>
+    (function () {
+      /* ─────────────────────────────────────────────────────────────
+         EDIT THIS WHEN STORE LISTINGS GO LIVE:
+         1) set live = true
+         2) fill appStore with the real App Store URL (…/app/expedoo/idXXXXXXXXX)
+         3) verify playStore package id (com.ganzza.expedoo — new Ganzza listing)
+         Until live = true, everyone is sent to the landing.
+         ───────────────────────────────────────────────────────────── */
+      var CONFIG = {
+        live: false,
+        appStore: '',   // TODO fill at launch, e.g. 'https://apps.apple.com/us/app/expedoo/id0000000000'
+        playStore: 'https://play.google.com/store/apps/details?id=com.ganzza.expedoo', // TODO verify at launch
+        landing: 'index.html'   // desktop / fallback / pre-launch (change to https://expedoo.top if hosting elsewhere)
+      };
+
+      var ua = navigator.userAgent || navigator.vendor || '';
+      var isIOS = /iPad|iPhone|iPod/.test(ua) ||
+                  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1); // iPadOS 13+
+      var isAndroid = /android/i.test(ua);
+
+      var target = CONFIG.landing;
+      if (CONFIG.live) {
+        if (isIOS && CONFIG.appStore) target = CONFIG.appStore;
+        else if (isAndroid && CONFIG.playStore) target = CONFIG.playStore;
+      }
+
+      var manual = document.getElementById('manual');
+      if (manual) manual.href = target;
+      // Give the page a beat to paint, then redirect.
+      setTimeout(function () { window.location.replace(target); }, 150);
+    })();
+  </script>
+  <noscript>
+    <div style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;">
+      <a href="index.html" style="color:#2563EB;font-weight:600">Continue to Expedoo →</a>
+    </div>
+  </noscript>
+</body>
+</html>

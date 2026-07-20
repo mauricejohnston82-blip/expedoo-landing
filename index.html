@@ -1,117 +1,232 @@
-﻿<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Expedoo — Track trips, fuel, and earnings. Built for expedited freight drivers in the USA." />
-  <meta property="og:title" content="Expedoo — Freight Driver App" />
-  <meta property="og:description" content="Know your numbers. Every trip. Track trips, fuel, and real profit.<br />Built for owner-operators." />
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Expedoo — Freight Driver App</title>
   <link rel="icon" href="logo.png">
+  <meta name="description" content="Expedoo — Track trips, fuel, and earnings. Built for expedited freight drivers in the USA." />
+  <meta property="og:title" content="Expedoo — Freight Driver App" />
+  <meta property="og:description" content="Know your numbers. Every trip." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  </style>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
       --bg: #F0F2F5;
-      --surface: #E8EBF0;
-      --card: #FFFFFF;
       --accent: #2563EB;
       --accent-light: #3B82F6;
-      --text: #111827;
-      --text-muted: #6B7280;
-      --border: #E2E6EC;
+      --accent-glow: rgba(37,99,235,0.25);
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --card-bg: rgba(255,255,255,0.55);
+      --card-border: rgba(255,255,255,0.8);
+      --elev-border: 1px solid rgba(15,23,42,0.06);
+      --elev-shadow: 0 8px 30px rgba(15,23,42,0.06);
+      --elev-shadow-hover: 0 16px 40px rgba(15,23,42,0.10);
+      --radius-card: 20px;
+    }
+
+    /* Reduced motion: KEEP gentle one-time fade/reveal/entrance (non-vestibular, safe & expected),
+       but stop continuous/looping + parallax motion (the vestibular-risky stuff). */
+    @media (prefers-reduced-motion: reduce) {
+      .parallax-el, .mesh-bg { transform: none !important; }
+      .phone-wrap, .mesh-bg::before, .mesh-bg::after { animation: none !important; }
     }
 
     html { scroll-behavior: smooth; }
 
     body {
+      font-family: 'DM Sans', sans-serif;
       background: var(--bg);
       color: var(--text);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 16px;
-      line-height: 1.6;
-      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
-      overflow-x: hidden;
-      background-image:
-        linear-gradient(rgba(37,99,235,0.035) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(37,99,235,0.035) 1px, transparent 1px);
-      background-size: 48px 48px;
     }
 
-    /* ─── ANIMATIONS ─────────────────────────────── */
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(28px); }
-      to   { opacity: 1; transform: translateY(0); }
+    /* ── ANIMATED GRADIENT MESH ── */
+    .mesh-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+      transform: translate3d(0, var(--mesh-parallax, 0px), 0);
+      will-change: transform;
+    }
+    .mesh-bg::before,
+    .mesh-bg::after {
+      content: '';
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: 0.35;
+      animation: meshFloat 12s ease-in-out infinite alternate;
+    }
+    .mesh-bg::before {
+      width: 700px; height: 700px;
+      background: radial-gradient(circle, #93c5fd, #2563eb, transparent 70%);
+      top: -200px; right: -100px;
+    }
+    .mesh-bg::after {
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, #bfdbfe, #60a5fa, transparent 70%);
+      bottom: 10%; left: -150px;
+      animation-delay: -6s;
+    }
+    @keyframes meshFloat {
+      0%   { transform: translate(0,0) scale(1); }
+      100% { transform: translate(40px, 60px) scale(1.08); }
     }
 
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
+    /* ── GRAIN / NOISE OVERLAY ── */
+    .grain-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      opacity: 0.03;
+      mix-blend-mode: overlay;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-repeat: repeat;
     }
 
-    @keyframes heroBgShift {
-      0%   { background-position: 0% 50%; }
-      50%  { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
+    /* ── INTERACTIVE DOT-GRID (magnetic) ──
+       Two stacked layers, both fixed & full-viewport, both behind content:
+       • .dot-grid  — static CSS radial-gradient grid (44px). The no-JS / reduced-motion
+                      / touch fallback: always renders a clean dot field everywhere.
+       • .dot-canvas — the SAME grid drawn on <canvas>, but each dot is pulled toward the
+                      cursor (magnetic) and eases back on leave. Takes over once JS inits. */
+    .dot-grid {
+      position: fixed; inset: 0; z-index: 0;
+      pointer-events: none;
+      background-image: radial-gradient(rgba(37,99,235,0.16) 1.3px, transparent 1.5px);
+      background-size: 44px 44px;
+      background-position: center center;
+      transition: opacity 0.4s ease;
     }
-
-    .fade-up { opacity: 0; animation: fadeInUp 0.7s ease forwards; }
-    .delay-1 { animation-delay: 0.1s; }
-    .delay-2 { animation-delay: 0.22s; }
-    .delay-3 { animation-delay: 0.36s; }
-    .delay-4 { animation-delay: 0.5s; }
-    .delay-5 { animation-delay: 0.65s; }
-
-    /* Scroll reveal — added by IntersectionObserver JS */
-    .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.65s ease, transform 0.65s ease; }
-    .reveal.visible { opacity: 1; transform: translateY(0); }
-
-    /* ─── LAYOUT UTILS ───────────────────────────── */
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 24px;
+    .dot-canvas {
+      position: fixed; inset: 0; z-index: 0;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.5s ease;
     }
+    /* When the interactive canvas is live, it replaces the static CSS grid (no double dots) */
+    body.has-dot-canvas .dot-grid { opacity: 0; }
+    body.has-dot-canvas .dot-canvas { opacity: 1; }
 
-    /* ─── NAV ────────────────────────────────────── */
+    /* ── NAV ── */
     nav {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      background: rgba(255,255,255,0.88);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 48px;
+      height: 64px;
+      background: rgba(240,242,245,0.75);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(255,255,255,0.6);
     }
-
-    .nav-inner {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 16px 24px;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
     .logo {
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      display: flex; align-items: center; gap: 10px;
       font-family: 'Sora', sans-serif;
-      font-size: 20px;
-      font-weight: 700;
+      font-weight: 800; font-size: 20px;
       color: var(--text);
       text-decoration: none;
-      letter-spacing: -0.3px;
+      letter-spacing: -0.5px;
+    }
+    .logo-icon {
+      width: 36px; height: 36px;
+      background: var(--accent);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .logo-icon svg { width: 20px; height: 20px; fill: white; }
+
+    .nav-links {
+      display: flex; align-items: center; gap: 32px;
+      list-style: none;
+    }
+    .nav-links a {
+      font-size: 14px; font-weight: 500;
+      color: var(--text-muted); text-decoration: none;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--text); }
+
+    .nav-cta {
+      background: var(--accent); color: white;
+      border: none; border-radius: 8px;
+      padding: 8px 20px; font-size: 14px; font-weight: 600;
+      cursor: pointer; font-family: 'DM Sans', sans-serif;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .nav-cta:hover { background: #1d4ed8; transform: translateY(-1px); }
+
+    /* ── SECTIONS WRAPPER ── */
+    main { position: relative; z-index: 1; }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: calc(100vh - 64px);
+      display: flex; align-items: center;
+      padding: 80px 48px 80px;
+      max-width: 1240px; margin: 0 auto;
+      gap: 64px;
+    }
+    .hero-left { flex: 1; max-width: 560px; }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(37,99,235,0.08);
+      border: 1px solid rgba(37,99,235,0.2);
+      border-radius: 100px;
+      padding: 5px 14px 5px 10px;
+      font-size: 12px; font-weight: 600;
+      color: var(--accent); margin-bottom: 28px;
+      letter-spacing: 0.4px;
+    }
+    .hero-badge-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--accent);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
     }
 
-    /* ─── CTA STORE BUTTONS ──────────────────────── */
+    .hero h1 {
+      font-family: 'Sora', sans-serif;
+      font-weight: 800; font-size: clamp(42px, 5vw, 64px);
+      line-height: 1.05; letter-spacing: -2px;
+      color: var(--text); margin-bottom: 22px;
+    }
+    .hero h1 em {
+      font-style: normal;
+      color: var(--accent);
+      background: linear-gradient(96deg, #1D4ED8 0%, #3B82F6 55%, #60A5FA 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-sub {
+      font-size: 18px; line-height: 1.65;
+      color: var(--text-muted); margin-bottom: 40px;
+      max-width: 440px; font-weight: 400;
+    }
+
+    .hero-ctas {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
     .btn-store {
       display: inline-flex;
       align-items: center;
@@ -147,30 +262,31 @@
         0 16px 36px rgba(0,0,0,0.18);
     }
 
+    .btn-appstore svg { width: 22px; height: 22px; fill: #fff; flex-shrink: 0; }
+
     .btn-googleplay {
-      background: rgba(255,255,255,0.88);
-      color: #1a1a1a;
-      border: 1px solid rgba(255,255,255,0.95);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
+      background: linear-gradient(165deg, #2c2c2e 0%, #000 100%);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.1);
       box-shadow:
-        inset 0 1px 0 rgba(255,255,255,1),
-        0 2px 6px rgba(0,0,0,0.05),
-        0 8px 24px rgba(0,0,0,0.08);
+        inset 0 1px 0 rgba(255,255,255,0.14),
+        0 2px 8px rgba(0,0,0,0.18),
+        0 10px 28px rgba(0,0,0,0.14);
     }
 
     .btn-googleplay:hover {
-      background: rgba(255,255,255,0.96);
       box-shadow:
-        inset 0 1px 0 rgba(255,255,255,1),
-        0 4px 12px rgba(0,0,0,0.07),
-        0 14px 32px rgba(0,0,0,0.1);
+        inset 0 1px 0 rgba(255,255,255,0.18),
+        0 4px 14px rgba(0,0,0,0.22),
+        0 16px 36px rgba(0,0,0,0.18);
     }
+
+    .btn-googleplay svg { width: 22px; height: 22px; flex-shrink: 0; }
 
     .btn-webapp {
       background: rgba(255,255,255,0.22);
       color: var(--text);
-      border: 1.5px solid rgba(17,24,39,0.16);
+      border: 1.5px solid rgba(15,23,42,0.16);
       backdrop-filter: blur(14px);
       -webkit-backdrop-filter: blur(14px);
       box-shadow: 0 2px 12px rgba(37,99,235,0.04);
@@ -182,25 +298,7 @@
       box-shadow: 0 6px 22px rgba(37,99,235,0.1);
     }
 
-    .cta-group {
-      display: flex;
-      flex-direction: row;
-      flex-wrap: wrap;
-      gap: 12px;
-      align-items: center;
-    }
-
-    .store-icon {
-      width: 22px;
-      height: 22px;
-      flex-shrink: 0;
-    }
-
-    .store-icon-play {
-      width: 22px;
-      height: 22px;
-      flex-shrink: 0;
-    }
+    .btn-webapp svg { width: 22px; height: 22px; flex-shrink: 0; }
 
     .btn-store-label {
       display: flex;
@@ -223,647 +321,754 @@
     }
 
     .btn-appstore .btn-store-label span:first-child { opacity: 0.72; }
-    .btn-googleplay .btn-store-label span:first-child { color: #64748b; }
+    .btn-googleplay .btn-store-label span:first-child { opacity: 0.72; }
     .btn-webapp .btn-store-label span:first-child { color: var(--text-muted); }
 
-    /* ─── HERO ───────────────────────────────────── */
-    #hero {
-      flex: 1;
-      padding: 120px 0 100px;
-      position: relative;
-      overflow: hidden;
-      background: linear-gradient(135deg, #EBF0FB 0%, #F0F2F5 35%, #EEF3FC 65%, #E8EEFB 100%);
-      background-size: 300% 300%;
-      animation: heroBgShift 18s ease infinite;
+    .hero-fine {
+      font-size: 13px; color: var(--text-muted);
+      display: flex; align-items: center; gap: 8px;
     }
+    .hero-fine::before { display: none; }
 
-    #hero::before {
-      content: '';
+    /* ── PHONE MOCKUP ── */
+    .hero-right {
+      flex: 1; display: flex;
+      justify-content: center; align-items: center;
+      position: relative; min-height: 620px;
+    }
+    .phone-glow {
       position: absolute;
-      top: -120px;
-      left: 30%;
-      transform: translateX(-50%);
-      width: 800px;
-      height: 700px;
-      background: radial-gradient(ellipse at center, rgba(37,99,235,0.09) 0%, transparent 65%);
-      pointer-events: none;
-    }
-
-    .hero-inner {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      align-items: center;
-      gap: 60px;
-    }
-
-    .hero-content { max-width: 560px; }
-
-       .hero-free {
-      font-size: 14px;
-      color: var(--text-muted);
-      margin-top: 16px;
-      letter-spacing: 0.2px;
-    }
-
-        .hero-carousel-glow {
-      position: relative;
-    }
-    .hero-carousel-glow::before {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 340px;
-      height: 500px;
-      background: radial-gradient(ellipse at center, rgba(37,99,235,0.18) 0%, transparent 70%);
-      pointer-events: none;
+      width: 480px; height: 580px;
+      background: radial-gradient(ellipse at center, rgba(37,99,235,0.55) 0%, rgba(59,130,246,0.28) 42%, rgba(96,165,250,0.12) 65%, transparent 78%);
+      border-radius: 50%;
+      filter: blur(50px);
       z-index: 0;
+      animation: glowBreathe 7s ease-in-out infinite;
     }
-
-     /* ─── HERO CAROUSEL ─────────────────────────── */
-    .hero-carousel {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 24px;
-      position: relative;
-    }
-
-    .carousel-phone-wrap {
-      position: relative;
-      display: flex;
-      align-items: center;
-      gap: 24px;
-      width: 100%;
-      justify-content: center;
-    }
-
-    /* ── iPhone realistic black shell ── */
-    .iphone-frame-wrap {
-      position: relative;
-      width: 320px;
-      cursor: pointer;
-      flex-shrink: 0;
-      background: linear-gradient(160deg, #2a2a2a 0%, #111111 40%, #1e1e1e 60%, #080808 100%);
-      border-radius: 52px;
-      padding: 8px;
-      box-shadow:
-        0 0 0 0.5px rgba(255,255,255,0.12),
-        inset 0 0 0 0.5px rgba(255,255,255,0.06),
-        0 50px 120px rgba(0,0,0,0.55),
-        0 20px 40px rgba(0,0,0,0.3),
-        0 4px 8px rgba(0,0,0,0.2);
-    }
-
-    /* Inner screen bezel */
-    .iphone-bezel {
-      background: #000;
-      border-radius: 46px;
-      padding: 2px;
-      overflow: hidden;
-    }
-
-    /* Side buttons */
-    .iphone-btn-vol-up,
-    .iphone-btn-vol-down,
-    .iphone-btn-silent,
-    .iphone-btn-power {
+    .phone-glow::after {
+      content: '';
       position: absolute;
-      background: linear-gradient(90deg, #1a1a1a, #3a3a3a, #1a1a1a);
-      border-radius: 3px;
+      inset: 50%;
+      width: 300px; height: 300px;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      border: 1px solid rgba(37,99,235,0.14);
+      filter: none;
+    }
+    @keyframes glowBreathe {
+      0%, 100% { opacity: 0.85; transform: scale(1); }
+      50%      { opacity: 1;    transform: scale(1.06); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .phone-glow { animation: none !important; }
+    }
+    .phone-wrap {
+      position: relative; z-index: 1;
+      animation: phoneFloat 4s ease-in-out infinite;
+    }
+    @keyframes phoneFloat {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-14px); }
+    }
+
+    /* Photoreal iPhone mockup — real titanium frame (frame16.png) */
+    .iphone-shell {
+      position: relative;
+      width: 300px;
+      aspect-ratio: 1350 / 2760;
+      filter: drop-shadow(0 44px 70px rgba(15,23,42,0.34)) drop-shadow(0 12px 26px rgba(15,23,42,0.18));
+    }
+    .frame-img {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      z-index: 3; pointer-events: none;
+    }
+    .iphone-screen {
+      position: absolute;
+      top: 2.2%; bottom: 2.2%; left: 2.9%; right: 2.9%;
+      border-radius: 34px;
+      overflow: hidden;
+      background: #eceef2;
       z-index: 1;
     }
-    /* Silent toggle */
-    .iphone-btn-silent {
-      left: -4px;
-      top: 17%;
-      width: 4px;
-      height: 4%;
-    }
-    /* Volume up */
-    .iphone-btn-vol-up {
-      left: -4px;
-      top: 24%;
-      width: 4px;
-      height: 9%;
-    }
-    /* Volume down */
-    .iphone-btn-vol-down {
-      left: -4px;
-      top: 35%;
-      width: 4px;
-      height: 9%;
-    }
-    /* Power button */
-    .iphone-btn-power {
-      right: -4px;
-      top: 28%;
-      width: 4px;
-      height: 13%;
-    }
-
-    /* Inner screen area — screenshot fills entirely */
-    .iphone-screen {
-      background: #000;
-      border-radius: 44px;
-      overflow: hidden;
-      position: relative;
-      aspect-ratio: 9/19.5;
-    }
-
-    /* Dynamic Island — hidden */
-    .iphone-dynamic-island { display: none; }
-
-    /* iOS Status Bar — hidden */
-    .iphone-status-bar { display: none; }
-
-    .hero-carousel .phone-frame {
-      display: none;
-    }
-
-    /* Slide container — clips the sliding track */
-    .carousel-track-clip {
+    /* iOS status bar — masks the baked-in Android bar; the Dynamic Island comes from the frame */
+    .ios-statusbar {
       position: absolute;
-      inset: 0;
-      overflow: hidden;
-      border-radius: 44px;
-    }
-
-    /* The sliding track that holds all slides side by side */
-    .carousel-track {
-      display: flex;
-      height: 100%;
-      transition: transform 300ms ease;
-    }
-
-    .carousel-slide {
-      flex: 0 0 100%;
-      height: 100%;
-      transition: filter 300ms ease, opacity 300ms ease;
-    }
-
-    .carousel-slide.inactive {
-      filter: blur(4px);
-      opacity: 0.6;
-    }
-
-    .carousel-slide img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-      border-radius: 44px;
-      -webkit-user-drag: none;
-      user-select: none;
-    }
-
-    .carousel-arrow {
-      width: 52px;
-      height: 52px;
-      border-radius: 50%;
-      background: rgba(255,255,255,0.72);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      border: none;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.14);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      font-size: 22px;
-      color: var(--text);
-      transition: background 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
-      flex-shrink: 0;
-      user-select: none;
-      -webkit-user-select: none;
-      touch-action: manipulation;
+      top: 0; left: 0; right: 0;
+      height: 5.6%;
       z-index: 2;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 7%;
+      background: #eceef2;
+      pointer-events: none;
     }
-
-    .carousel-arrow:hover {
-      background: rgba(255,255,255,0.92);
-      box-shadow: 0 6px 28px rgba(37,99,235,0.22);
-      transform: scale(1.1);
-      color: var(--accent);
+    .ios-time {
+      font-family: 'Sora', sans-serif;
+      font-size: 13px; font-weight: 700; color: #0f172a;
+      letter-spacing: 0.2px;
     }
+    .ios-right { display: flex; align-items: center; gap: 4px; }
+    .ios-right svg { display: block; }
 
-    .carousel-dots {
-      display: flex;
-      gap: 10px;
-      align-items: center;
+    /* Screen carousel (crossfade) */
+    .screen-carousel { position: absolute; inset: 0; z-index: 1; }
+    .screen-carousel .c-slide {
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%;
+      object-fit: cover; object-position: top center;
+      opacity: 0; transition: opacity 0.55s ease;
     }
+    .screen-carousel .c-slide.active { opacity: 1; }
 
-    .carousel-dot {
-      width: 10px;
-      height: 10px;
+    /* Arrow buttons — frosted glass, minimal; fade up on phone hover */
+    .carousel-btn {
+      position: absolute;
+      top: 50%; transform: translateY(-50%);
+      width: 38px; height: 38px;
+      background: rgba(255,255,255,0.42);
+      border: 1px solid rgba(255,255,255,0.75);
       border-radius: 50%;
-      background: var(--border);
-      border: none;
-      cursor: pointer;
-      transition: background 0.25s ease, transform 0.25s ease, width 0.25s ease;
-      padding: 0;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; z-index: 30;
+      opacity: 0.6;
+      box-shadow: 0 8px 22px rgba(15,23,42,0.14), inset 0 1px 0 rgba(255,255,255,0.9);
+      backdrop-filter: blur(14px) saturate(1.5);
+      -webkit-backdrop-filter: blur(14px) saturate(1.5);
+      transition: background 0.25s ease, transform 0.25s cubic-bezier(0.34,1.4,0.64,1),
+                  box-shadow 0.25s ease, opacity 0.25s ease;
+    }
+    .phone-wrap:hover .carousel-btn { opacity: 1; }
+    .carousel-btn:hover {
+      background: rgba(255,255,255,0.85);
+      transform: translateY(-50%) scale(1.12);
+      box-shadow: 0 12px 28px rgba(37,99,235,0.24), inset 0 1px 0 rgba(255,255,255,1);
+    }
+    .carousel-btn:active { transform: translateY(-50%) scale(0.96); }
+    .carousel-btn svg {
+      width: 16px; height: 16px;
+      stroke: var(--accent); fill: none; stroke-width: 2.2;
+      stroke-linecap: round; stroke-linejoin: round;
+    }
+    /* Sit clear of the phone with a comfortable gap (was overlapping the frame) */
+    .carousel-btn.prev { left: -56px; }
+    .carousel-btn.next { right: -56px; }
+    .carousel-btn.prev svg { margin-right: 1px; }
+    .carousel-btn.next svg { margin-left: 1px; }
+    /* Desktop-only control: no arrows on touch / coarse-pointer devices — swipe instead */
+    @media (hover: none), (pointer: coarse) {
+      .carousel-btn { display: none !important; }
     }
 
+    /* Dots */
+    .carousel-dots {
+      position: absolute;
+      bottom: -28px; left: 50%; transform: translateX(-50%);
+      display: flex; gap: 6px; align-items: center;
+    }
+    .carousel-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: rgba(37,99,235,0.25);
+      cursor: pointer;
+      transition: background 0.2s, transform 0.2s;
+    }
     .carousel-dot.active {
       background: var(--accent);
       transform: scale(1.3);
     }
 
-    @media (max-width: 900px) {
-      .hero-inner {
-        grid-template-columns: 1fr;
-        text-align: center;
-      }
-      .hero-content { max-width: 100%; }
-      .hero-sub { max-width: 100% !important; }
-      .cta-group { justify-content: center; }
-      .hero-carousel { margin: 40px auto 0; width: 100%; }
+    /* ── SCROLL REVEAL ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(28px) scale(0.98);
+      transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+      will-change: opacity, transform;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      will-change: auto;
     }
 
-    /* ─── MOBILE: arrows below phone, phone full-width ─── */
-    @media (max-width: 600px) {
-      #hero { padding: 60px 0 56px; }
-
-      .hero-carousel { gap: 16px; }
-
-      /* Stack: phone on top, arrows row below */
-      .carousel-phone-wrap {
-        flex-direction: column;
-        gap: 16px;
-      }
-
-      /* Phone fills available width with padding */
-      .iphone-frame-wrap {
-        width: min(280px, calc(100vw - 48px));
-        order: 1;
-      }
-
-      /* Arrows row below phone — hidden on mobile */
-      .carousel-arrows-row {
-        display: none;
-      }
-
-      /* Hide arrows from phone-wrap row on mobile */
-      .carousel-phone-wrap > .carousel-arrow {
-        display: none;
-      }
+    /* ── HERO ENTRANCE (staggered on load — pure CSS keyframes, self-starting) ── */
+    @keyframes heroIn {
+      from { opacity: 0; transform: translateY(22px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes heroInPhone {
+      from { opacity: 0; transform: translateY(22px) scale(0.96); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .hero-entrance {
+      opacity: 0;
+      animation: heroIn 0.65s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    .hero-entrance.phone-entrance {
+      animation-name: heroInPhone;
+      animation-duration: 0.8s;
     }
 
-    @media (min-width: 601px) {
-      .carousel-arrows-row { display: none; }
-      .iphone-frame-wrap { width: min(320px, calc(100vw - 200px)); }
+    /* ── MAGNETIC CTA ── */
+    .magnetic {
+      transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.22s ease, background 0.22s ease, border-color 0.22s ease;
     }
 
-    .hero-badge {
-      display: inline-flex;
+    /* ── PARALLAX (base transform set via JS, translate3d only) ── */
+    .parallax-el { will-change: transform; }
+    #heroPhoneParallax {
+      display: flex;
       align-items: center;
-      gap: 6px;
-      background: rgba(37,99,235,0.08);
-      border: 1px solid rgba(37,99,235,0.2);
-      border-radius: 100px;
-      padding: 6px 14px;
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--accent);
-      margin-bottom: 24px;
+      justify-content: center;
     }
 
-    .hero-badge::before {
-      content: '';
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--accent);
-      animation: pulse 2s infinite;
+    /* ── ROUTES TICKER ── */
+    .routes-ticker {
+      position: relative;
+      max-width: 1240px; margin: 0 auto;
+      padding: 4px 0 0;
+      -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 64px, #000 calc(100% - 64px), transparent 100%);
+      mask-image: linear-gradient(90deg, transparent 0, #000 64px, #000 calc(100% - 64px), transparent 100%);
+      overflow: hidden;
     }
-
-    h1 {
-      font-family: 'Sora', sans-serif;
-      font-size: clamp(36px, 5.5vw, 62px);
-      font-weight: 800;
-      line-height: 1.05;
-      letter-spacing: -2px;
-      color: #0D1117;
-      margin-bottom: 20px;
+    .routes-track {
+      display: flex;
+      align-items: center;
+      width: max-content;
+      animation: tickerScroll 52s linear infinite;
     }
-
-    h1 span {
-      background: linear-gradient(135deg, #1D4ED8 0%, #3B82F6 50%, #60A5FA 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .hero-sub {
-      font-size: 18px;
+    .routes-ticker:hover .routes-track { animation-play-state: paused; }
+    .routes-track .route-chip {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 13px; font-weight: 500;
       color: var(--text-muted);
-      max-width: 480px;
-      margin-bottom: 36px;
-      line-height: 1.7;
+      white-space: nowrap;
+      padding: 10px 20px;
+      letter-spacing: 0.1px;
+    }
+    .routes-track .route-chip b { color: var(--text); font-weight: 600; }
+    .routes-track .route-chip .route-price { color: var(--accent); font-weight: 700; }
+    .routes-track .route-dot {
+      width: 3px; height: 3px; border-radius: 50%;
+      background: rgba(100,116,139,0.4);
+      flex-shrink: 0;
+    }
+    @keyframes tickerScroll {
+      from { transform: translate3d(0,0,0); }
+      to   { transform: translate3d(-50%,0,0); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .routes-track { animation: none !important; }
     }
 
-    /* ─── FEATURES ───────────────────────────────── */
-    #features {
-      padding: 96px 0;
-      background: var(--bg);
+    /* ── FEATURES ── */
+    .features {
+      padding: 100px 48px;
+      max-width: 1240px; margin: 0 auto;
     }
-
-    .features-header {
-      margin-bottom: 48px;
+    .section-tag {
+      text-align: center;
+      font-size: 12px; font-weight: 700;
+      color: var(--accent); text-transform: uppercase;
+      letter-spacing: 1.5px; margin-bottom: 16px;
     }
-
-    .features-header h2 {
+    .section-title {
       font-family: 'Sora', sans-serif;
-      font-size: clamp(28px, 4vw, 40px);
-      font-weight: 800;
-      letter-spacing: -1px;
-      color: var(--text);
-      margin-bottom: 12px;
+      font-weight: 800; font-size: clamp(30px, 4vw, 44px);
+      text-align: center; letter-spacing: -1.5px;
+      line-height: 1.1; margin-bottom: 16px;
     }
-
-    .features-header p {
-      font-size: 17px;
-      color: var(--text-muted);
+    .section-sub {
+      text-align: center; color: var(--text-muted);
+      font-size: 17px; max-width: 500px;
+      margin: 0 auto 64px; line-height: 1.65;
     }
-
     .features-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-    }
-
-    .feature-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-left: 3px solid transparent;
-      border-radius: 16px;
-      padding: 32px 28px;
-      transition: box-shadow 0.25s ease, transform 0.25s ease, border-left-color 0.25s ease;
-    }
-
-    .feature-card:hover {
-      box-shadow: 0 10px 36px rgba(0,0,0,0.09);
-      transform: translateY(-3px);
-      border-left-color: var(--accent);
-    }
-
-    .feature-icon {
-      width: 56px;
-      height: 56px;
-      border-radius: 14px;
-      background: linear-gradient(135deg, #1D4ED8 0%, #3B82F6 100%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 16px;
-      flex-shrink: 0;
-      box-shadow: 0 4px 14px rgba(37,99,235,0.28);
-    }
-
-    .feature-divider {
-      height: 1px;
-      background: var(--border);
-      margin-bottom: 16px;
-    }
-
-    .feature-card h3 {
-      font-family: 'Sora', sans-serif;
-      font-size: 17px;
-      font-weight: 700;
-      color: #0D1117;
-      margin-bottom: 8px;
-      letter-spacing: -0.3px;
-    }
-
-    .feature-card p {
-      font-size: 15px;
-      color: var(--text-muted);
-      line-height: 1.6;
-    }
-
-    @media (max-width: 768px) {
-      #features { padding: 60px 0; }
-      .features-grid { grid-template-columns: 1fr; gap: 14px; }
-    }
-
-    /* ─── SCREENSHOTS ───────────────────────────── */
-    #screenshots {
-      padding: 60px 0;
-      background: var(--bg);
-    }
-
-    .screenshots-row {
-      display: flex;
-      justify-content: center;
-      gap: 28px;
-      flex-wrap: wrap;
-    }
-
-    .phone-mockup {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .phone-frame {
-      width: 200px;
-      aspect-ratio: 9 / 19.5;
-      border: none;
-      border-radius: 36px;
-      overflow: hidden;
-      background: #1a1a2e;
-      flex-shrink: 0;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.12), 0 4px 16px rgba(0,0,0,0.08);
-    }
-
-    .phone-frame img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      border-radius: 34px;
-      display: block;
-    }
-
-    .phone-label {
-      font-size: 13px;
-      color: var(--text-muted);
-      text-align: center;
-    }
-
-    @media (max-width: 768px) {
-      .screenshots-row {
-        display: grid;
-        grid-template-columns: repeat(2, auto);
-        gap: 20px;
-      }
-    }
-
-    @media (max-width: 480px) {
-      .screenshots-row {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    /* ─── FOOTER ─────────────────────────────────── */
-    footer {
-      background: var(--surface);
-      border-top: 2px solid var(--accent);
-      padding: 40px 0;
-    }
-
-    .footer-inner {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 20px;
-    }
-
-    .footer-links {
-      display: flex;
-      align-items: center;
       gap: 24px;
     }
+    .feature-card {
+      background: var(--card-bg);
+      border: var(--elev-border);
+      border-radius: var(--radius-card);
+      padding: 32px;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      box-shadow: var(--elev-shadow);
+      transition: transform 0.22s ease, box-shadow 0.22s ease;
+      position: relative; overflow: hidden;
+    }
+    .feature-card::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.35) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .feature-card:hover {
+      transform: translateY(-6px);
+      box-shadow: var(--elev-shadow-hover);
+    }
+    .feature-icon {
+      width: 52px; height: 52px; border-radius: 14px;
+      background: linear-gradient(135deg, var(--accent), #60a5fa);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 22px;
+      box-shadow: 0 4px 16px rgba(37,99,235,0.35);
+    }
+    .feature-icon svg { width: 26px; height: 26px; fill: white; }
+    .feature-name {
+      font-family: 'Sora', sans-serif;
+      font-weight: 700; font-size: 18px;
+      margin-bottom: 10px; letter-spacing: -0.3px;
+    }
+    .feature-desc { font-size: 14px; color: var(--text-muted); line-height: 1.65; }
 
+    /* ── STATS BANNER ── */
+    .stats-banner {
+      max-width: 1240px; margin: 0 auto;
+      padding: 0 48px 100px;
+      display: grid; grid-template-columns: repeat(3,1fr);
+      gap: 24px;
+    }
+    .stat-tile {
+      background: var(--card-bg);
+      border: var(--elev-border);
+      border-radius: var(--radius-card); padding: 36px 32px;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      box-shadow: var(--elev-shadow);
+      text-align: center;
+      position: relative; overflow: hidden;
+      transition: transform 0.22s ease, box-shadow 0.22s ease;
+    }
+    .stat-tile::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.35) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .stat-tile:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--elev-shadow-hover);
+    }
+    .stat-tile-num {
+      font-family: 'Sora', sans-serif;
+      font-weight: 800; font-size: 42px;
+      letter-spacing: -1.5px; color: var(--accent);
+      margin-bottom: 6px;
+      position: relative;
+    }
+    .stat-tile-label { font-size: 14px; color: var(--text-muted); position: relative; }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid rgba(0,0,0,0.07);
+      padding: 32px 48px;
+      display: flex; align-items: center; justify-content: space-between;
+      position: relative; z-index: 1;
+    }
+    .footer-logo {
+      font-family: 'Sora', sans-serif;
+      font-weight: 800; font-size: 16px;
+      color: var(--text); display: flex; align-items: center; gap: 8px;
+    }
+    .footer-logo .logo-icon { width: 28px; height: 28px; border-radius: 8px; }
+    .footer-logo .logo-icon svg { width: 15px; height: 15px; }
+    .footer-links { display: flex; gap: 24px; align-items: center; }
     .footer-links a {
-      color: var(--text-muted);
-      text-decoration: none;
-      font-size: 14px;
-      transition: color 0.18s;
+      font-size: 13px; color: var(--text-muted); text-decoration: none;
+      transition: color 0.2s;
+    }
+    .footer-links a:hover { color: var(--text); }
+    .footer-copy { font-size: 13px; color: var(--text-muted); }
+
+    /* ── SOCIAL PROOF (hero) ── */
+    .social-proof {
+      display: flex; align-items: center; gap: 14px;
+      margin-top: 26px; flex-wrap: wrap;
+    }
+    .sp-avatars { display: flex; }
+    .sp-avatars span {
+      width: 36px; height: 36px; border-radius: 50%;
+      border: 2px solid var(--bg); margin-left: -12px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Sora', sans-serif; font-size: 12px; font-weight: 700; color: #fff;
+      box-shadow: 0 2px 8px rgba(15,23,42,0.15);
+    }
+    .sp-avatars span:first-child { margin-left: 0; }
+    .sp-text { font-size: 13px; color: var(--text-muted); line-height: 1.45; }
+    .sp-text b { color: var(--text); font-weight: 700; }
+    .sp-stars { color: #F59E0B; letter-spacing: 1px; font-size: 14px; }
+
+    /* ── FEATURE SCREENSHOT ── */
+    .feature-shot {
+      position: relative;
+      width: 100%; aspect-ratio: 5 / 4;
+      border-radius: 16px; overflow: hidden; margin-bottom: 22px;
+      background: #eceef2;
+      box-shadow: 0 10px 28px rgba(15,23,42,0.10), inset 0 0 0 1px rgba(255,255,255,0.6);
+    }
+    .feature-shot img {
+      width: 100%; height: 100%;
+      object-fit: cover; object-position: center 20%;
+      display: block; transition: transform 0.4s ease;
+    }
+    .feature-card:hover .feature-shot img { transform: scale(1.04); }
+    .feature-badge {
+      display: inline-block; vertical-align: middle;
+      margin-left: 10px;
+      background: rgba(37,99,235,0.10);
+      border: 1px solid rgba(37,99,235,0.20);
+      border-radius: 100px;
+      padding: 3px 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px; font-weight: 600;
+      color: var(--accent);
+      letter-spacing: 0.1px;
+      white-space: nowrap;
+    }
+    /* Feature header: blue icon inline-left of the title (no longer floating between shot & name) */
+    .feature-head {
+      display: flex; align-items: center; gap: 13px;
+      margin-bottom: 12px;
+    }
+    .feature-icon-sm {
+      width: 42px; height: 42px; border-radius: 12px;
+      background: linear-gradient(135deg, #1D4ED8, #3B82F6);
+      box-shadow: 0 4px 14px rgba(29,78,216,0.45);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .feature-icon-sm svg { width: 22px; height: 22px; }
+    .feature-head .feature-name { margin-bottom: 0; }
+
+    /* ── TESTIMONIALS ── */
+    .testimonials { max-width: 1240px; margin: 0 auto; padding: 0 48px 100px; }
+    .tst-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .tst-card {
+      background: var(--card-bg); border: var(--elev-border);
+      border-radius: var(--radius-card); padding: 28px;
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      box-shadow: var(--elev-shadow);
+      transition: transform 0.22s ease, box-shadow 0.22s ease;
+    }
+    .tst-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--elev-shadow-hover);
+    }
+    .tst-stars { color: #F59E0B; font-size: 15px; letter-spacing: 2px; margin-bottom: 14px; }
+    .tst-quote { font-size: 15px; line-height: 1.62; color: var(--text); margin-bottom: 22px; }
+    .tst-author { display: flex; align-items: center; gap: 12px; }
+    .tst-avatar {
+      width: 42px; height: 42px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Sora', sans-serif; font-weight: 700; color: #fff; font-size: 14px;
+    }
+    .tst-name { font-size: 14px; font-weight: 700; }
+    .tst-role { font-size: 12px; color: var(--text-muted); }
+
+    /* ── CTA BAND ── */
+    .cta-band { max-width: 1240px; margin: 0 auto 100px; padding: 0 48px; }
+    .cta-inner {
+      position: relative; overflow: hidden; border-radius: 32px;
+      padding: 56px 52px;
+      background: linear-gradient(135deg, #1D4ED8 0%, #2563EB 48%, #3B82F6 100%);
+      box-shadow: 0 30px 70px rgba(37,99,235,0.35);
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 44px; flex-wrap: wrap;
+    }
+    .cta-inner::before {
+      content: ''; position: absolute; width: 420px; height: 420px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,255,255,0.20), transparent 70%);
+      top: -160px; right: -90px; pointer-events: none;
+    }
+    .cta-left { position: relative; z-index: 1; max-width: 560px; }
+    .cta-left h2 {
+      font-family: 'Sora', sans-serif; font-weight: 800;
+      font-size: clamp(28px, 3.4vw, 42px); color: #fff; letter-spacing: -1.2px;
+      line-height: 1.08; margin-bottom: 12px;
+    }
+    .cta-left p { color: rgba(255,255,255,0.92); font-size: 16px; line-height: 1.5; }
+    .cta-badges { display: flex; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
+    .cta-qr {
+      position: relative; z-index: 1; background: #fff; border-radius: 20px;
+      padding: 14px 14px 10px; text-align: center;
+      box-shadow: 0 14px 34px rgba(0,0,0,0.20);
+    }
+    .cta-qr img { width: 124px; height: 124px; display: block; }
+    .cta-qr span { display: block; font-size: 11px; color: #64748b; margin-top: 8px; font-weight: 600; }
+
+    /* ── HOW IT WORKS (scroll-driven phone showcase) ── */
+    .howworks { max-width: 1240px; margin: 0 auto; padding: 20px 48px 100px; }
+    .hw-head { max-width: 620px; margin: 0 auto 64px; text-align: center; }
+    /* Static alternating rows (reliable — no sticky, which breaks under body overflow-x:hidden) */
+    .hw-inner { max-width: 1040px; margin: 0 auto; }
+    .hw-sticky-col { display: none; }
+    .hw-progress { display: none; }
+    .hw-steps { display: flex; flex-direction: column; gap: 96px; max-width: 940px; margin: 0 auto; }
+    .hw-step {
+      display: flex; align-items: center; justify-content: center; gap: 80px;
+    }
+    .hw-step:nth-child(even) { flex-direction: row-reverse; }
+    .hw-step-shot { flex: 0 0 300px; display: block; }
+    .hw-step-shot .iphone-shell { width: 300px; }
+    .hw-step-text { flex: 0 1 380px; }
+    .hw-step-num {
+      display: inline-flex; align-items: center; gap: 10px;
+      font-family: 'Sora', sans-serif; font-weight: 800;
+      font-size: 13px; color: var(--accent);
+      letter-spacing: 1.2px; text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .hw-step-num::before {
+      content: ''; width: 26px; height: 2px; border-radius: 2px;
+      background: var(--accent); opacity: .6;
+    }
+    .hw-step-title {
+      font-family: 'Sora', sans-serif; font-weight: 800;
+      font-size: clamp(24px, 2.6vw, 32px); letter-spacing: -1px;
+      line-height: 1.15; margin-bottom: 14px;
+    }
+    .hw-step-copy { font-size: 16px; color: var(--text-muted); line-height: 1.65; }
+
+    @media (max-width: 900px) {
+      .hw-step, .hw-step:nth-child(even) { flex-direction: column; gap: 26px; text-align: center; }
+      .hw-step-shot, .hw-step-shot .iphone-shell { width: 240px; flex-basis: 240px; }
+      .hw-step-text { flex-basis: auto; max-width: 340px; }
+      .hw-step-num { justify-content: center; }
     }
 
-    .footer-links a:hover { color: var(--accent); }
+    /* ── LOAD BOARD SHOWCASE ── */
+    .loadboard { max-width: 1240px; margin: 0 auto; padding: 20px 48px 100px; }
+    .lb-inner { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 56px; align-items: center; }
+    .lb-text .section-tag { text-align: left; }
+    .lb-title {
+      font-family: 'Sora', sans-serif; font-weight: 800;
+      font-size: clamp(28px, 3.4vw, 42px); letter-spacing: -1.2px; line-height: 1.1;
+      margin: 14px 0 16px;
+    }
+    .lb-sub { font-size: 17px; color: var(--text-muted); line-height: 1.62; margin-bottom: 28px; max-width: 480px; }
+    .lb-list { list-style: none; display: flex; flex-direction: column; gap: 18px; }
+    .lb-list li { display: flex; align-items: flex-start; gap: 14px; font-size: 15px; color: var(--text-muted); line-height: 1.5; }
+    .lb-list li b { color: var(--text); font-weight: 700; }
+    .lb-ic {
+      flex-shrink: 0; width: 34px; height: 34px; border-radius: 10px;
+      background: rgba(37,99,235,0.10);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .lb-ic svg { width: 18px; height: 18px; stroke: var(--accent); fill: none; stroke-width: 2; }
+    .lb-shot { display: flex; justify-content: center; position: relative; }
+    .lb-shot .iphone-shell { width: 286px; }
+    .lb-screen-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top center; }
 
-    .footer-copy {
-      font-size: 13px;
-      color: var(--text-muted);
+    /* ── FLEET BAND (trucks) ── */
+    .fleet {
+      position: relative; margin: 0 0 100px; min-height: 440px;
+      display: flex; align-items: center;
+      overflow: hidden;
+    }
+    .fleet::before {
+      content: '';
+      position: absolute;
+      top: -6%; left: 0; right: 0; bottom: -6%;
+      background:
+        linear-gradient(100deg, rgba(8,14,30,0.94) 0%, rgba(8,14,30,0.62) 52%, rgba(8,14,30,0.28) 100%),
+        url('assets/fleet.jpg') center/cover no-repeat;
+      transform: translate3d(0, var(--fleet-parallax, 0px), 0);
+      will-change: transform;
+      z-index: 0;
+    }
+    .fleet-inner { position: relative; z-index: 1; max-width: 1240px; margin: 0 auto; padding: 68px 48px; width: 100%; }
+    .fleet-copy { max-width: 640px; }
+    .fleet .section-tag { color: #93c5fd; text-align: left; }
+    .fleet-title {
+      font-family: 'Sora', sans-serif; font-weight: 800;
+      font-size: clamp(28px, 3.6vw, 44px); color: #fff;
+      letter-spacing: -1.4px; line-height: 1.08; margin: 12px 0 16px;
+    }
+    .fleet-sub { font-size: 17px; color: rgba(255,255,255,0.85); line-height: 1.6; margin-bottom: 26px; max-width: 540px; }
+    .fleet-chips { display: flex; flex-wrap: wrap; gap: 10px; max-width: 540px; }
+    .fleet-chip {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.22);
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+      border-radius: 100px; padding: 9px 16px;
+      font-size: 14px; font-weight: 600; color: #fff;
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background 0.2s ease, border-color 0.2s ease;
+    }
+    .fleet-chip:hover {
+      transform: translateY(-3px);
+      background: rgba(255,255,255,0.16);
+      border-color: rgba(255,255,255,0.34);
+    }
+    .fleet-chip svg { width: 17px; height: 17px; stroke: #93c5fd; fill: none; stroke-width: 2; }
+
+    /* ── RESPONSIVE ── */
+
+    /* Tablet: 768–1024px */
+    @media (max-width: 1024px) {
+      .hero { gap: 40px; padding: 60px 32px; }
+      .hero h1 { font-size: 44px; }
+      .hero-sub { font-size: 16px; }
+      .features { padding: 80px 32px; }
+      .stats-banner { padding: 0 32px 80px; }
     }
 
-    /* ─── RESPONSIVE ─────────────────────────────── */
-    @media (max-width: 768px) {
-      .footer-inner {
-        flex-direction: column;
-        text-align: center;
+    /* Tablet compressed: 768–900px — two columns still */
+    @media (max-width: 900px) and (min-width: 640px) {
+      nav { padding: 0 24px; }
+      .hero { padding: 48px 24px; gap: 32px; }
+      .hero h1 { font-size: 36px; letter-spacing: -1px; }
+      .hero-sub { font-size: 15px; }
+      .hero-right { min-height: unset; }
+      .features { padding: 60px 24px; }
+      .features-grid { grid-template-columns: 1fr; }
+      .stats-banner { grid-template-columns: 1fr 1fr; padding: 0 24px 60px; gap: 16px; }
+      .testimonials { padding: 0 24px 60px; }
+      .tst-grid { grid-template-columns: 1fr; }
+      .loadboard { padding: 20px 24px 60px; }
+      .lb-inner { grid-template-columns: 1fr; gap: 40px; }
+      .cta-band { padding: 0 24px; }
+      .cta-inner { padding: 40px 32px; justify-content: center; }
+      .cta-qr { margin: 0 auto; }
+      footer { flex-wrap: wrap; gap: 12px; padding: 24px; }
+    }
+
+    /* Mobile: up to 639px — single column */
+    @media (max-width: 639px) {
+      .mesh-bg::before {
+        width: 300px; height: 300px;
+        opacity: 0.15;
+        top: -100px; right: -50px;
       }
-    }
+      .mesh-bg::after {
+        width: 200px; height: 200px;
+        opacity: 0.1;
+      }
+      nav {
+        padding: 0 16px;
+        padding-left: max(16px, env(safe-area-inset-left));
+        padding-right: max(16px, env(safe-area-inset-right));
+        position: relative;
+      }
+      .nav-links { display: none; }
+      .nav-cta { padding: 7px 14px; font-size: 13px; }
 
-    @media (max-width: 640px) {
-      .cta-group {
+      .hero {
+        flex-direction: column;
+        padding: 40px 20px 60px;
+        padding-left: max(20px, env(safe-area-inset-left));
+        padding-right: max(20px, env(safe-area-inset-right));
+        text-align: center;
+        gap: 40px;
+        min-height: unset;
+      }
+      .hero-left { max-width: 100%; }
+      .hero h1 { font-size: 36px; letter-spacing: -1px; }
+      .hero-sub { font-size: 15px; margin-bottom: 28px; max-width: 100%; }
+      .hero-badge { font-size: 11px; }
+
+      .hero-ctas {
         flex-direction: column;
         align-items: stretch;
         gap: 10px;
       }
-      .cta-group .btn-store {
-        width: 100%;
+      .btn-store {
         justify-content: center;
+        width: 100%;
         padding: 13px 20px;
       }
+      .hero-fine { justify-content: center; }
+
+      .hero-right {
+        min-height: unset;
+        width: 100%;
+        justify-content: center;
+      }
+      /* Shrink phone on mobile */
+      #carousel { width: 250px !important; }
+      /* No carousel arrows on mobile — swipe only */
+      .carousel-btn { display: none !important; }
+      .phone-glow { width: 250px; height: 400px; }
+
+      .routes-ticker {
+        -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 28px, #000 calc(100% - 28px), transparent 100%);
+        mask-image: linear-gradient(90deg, transparent 0, #000 28px, #000 calc(100% - 28px), transparent 100%);
+      }
+      .routes-track .route-chip { font-size: 12px; padding: 8px 14px; }
+
+      .features {
+        padding: 60px 20px;
+        padding-left: max(20px, env(safe-area-inset-left));
+        padding-right: max(20px, env(safe-area-inset-right));
+      }
+      .section-title { font-size: 28px; }
+      .section-sub { font-size: 15px; }
+      .features-grid { grid-template-columns: 1fr; gap: 16px; }
+      .feature-card { padding: 24px; }
+
+      .stats-banner {
+        grid-template-columns: 1fr;
+        padding: 0 20px 60px;
+        padding-left: max(20px, env(safe-area-inset-left));
+        padding-right: max(20px, env(safe-area-inset-right));
+        gap: 16px;
+      }
+      .stat-tile-num { font-size: 36px; }
+
+      .social-proof { justify-content: center; }
+      .testimonials {
+        padding: 0 20px 60px;
+        padding-left: max(20px, env(safe-area-inset-left));
+        padding-right: max(20px, env(safe-area-inset-right));
+      }
+      .tst-grid { grid-template-columns: 1fr; gap: 16px; }
+      .howworks { padding: 10px 20px 60px; }
+      .hw-head { margin-bottom: 40px; }
+      .loadboard { padding: 10px 20px 60px; }
+      .lb-inner { grid-template-columns: 1fr; gap: 34px; text-align: center; }
+      .lb-text .section-tag { text-align: center; }
+      .lb-sub { margin-left: auto; margin-right: auto; }
+      .lb-list { text-align: left; max-width: 420px; margin: 0 auto; }
+      .lb-shot .iphone-shell { width: 260px; }
+      .fleet { min-height: auto; margin-bottom: 60px; }
+      .fleet-inner {
+        padding: 52px 20px;
+        padding-left: max(20px, env(safe-area-inset-left));
+        padding-right: max(20px, env(safe-area-inset-right));
+      }
+      .fleet-title { font-size: 28px; }
+      .fleet-chips { max-width: 226px; gap: 8px; }
+      .cta-band {
+        padding: 0 20px;
+        padding-left: max(20px, env(safe-area-inset-left));
+        padding-right: max(20px, env(safe-area-inset-right));
+      }
+      .cta-inner { padding: 36px 24px; flex-direction: column; text-align: center; gap: 28px; border-radius: 24px; }
+      .cta-left { max-width: 100%; }
+      .cta-badges { justify-content: center; }
+      .feature-shot { aspect-ratio: 16 / 11; }
+
+      footer {
+        flex-direction: column;
+        gap: 16px;
+        text-align: center;
+        padding: 24px 20px;
+        padding-bottom: max(24px, env(safe-area-inset-bottom));
+      }
+      .footer-links { flex-wrap: wrap; justify-content: center; gap: 16px; }
     }
 
-    @media (max-width: 480px) {
-      h1 { font-size: clamp(26px, 8vw, 44px); letter-spacing: -1px; }
-      .hero-sub { font-size: 15px; }
-      .features-header h2 { font-size: 24px; }
-      .feature-card { padding: 24px 20px; }
-    }
 
-    @media (max-width: 375px) {
-      h1 { font-size: 24px; }
-      .hero-sub { font-size: 14px; }
-    }
-
-    /* ─── LIGHTBOX ───────────────────────────────── */
-    #lightbox {
-      display: none;
-      position: fixed;
-      inset: 0;
-      z-index: 9999;
-      background: rgba(0,0,0,0.88);
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
-      align-items: center;
-      justify-content: center;
-    }
-
-    #lightbox.open { display: flex; }
-
-    #lightbox-img-wrap {
-      position: relative;
-      max-width: 320px;
-      width: 90vw;
-    }
-
-    #lightbox-img {
-      width: 100%;
-      border-radius: 28px;
-      box-shadow: 0 32px 80px rgba(0,0,0,0.6);
-      display: block;
-    }
-
-    .lb-btn {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      background: rgba(255,255,255,0.12);
-      border: 1px solid rgba(255,255,255,0.22);
-      color: #fff;
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      font-size: 20px;
-      transition: background 0.18s;
-      z-index: 1;
-      user-select: none;
-    }
-
-    .lb-btn:hover { background: rgba(255,255,255,0.22); }
-
-    #lb-prev { left: -56px; }
-    #lb-next { right: -56px; }
-
-    #lb-close {
-      position: fixed;
-      top: 20px;
-      right: 24px;
-      background: rgba(255,255,255,0.12);
-      border: 1px solid rgba(255,255,255,0.22);
-      color: #fff;
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      font-size: 22px;
-      transition: background 0.18s;
-    }
-
-    #lb-close:hover { background: rgba(255,255,255,0.25); }
-
-    #lb-counter {
-      position: absolute;
-      bottom: -36px;
-      left: 50%;
-      transform: translateX(-50%);
-      color: rgba(255,255,255,0.6);
-      font-size: 13px;
-      white-space: nowrap;
-    }
-
-    @media (max-width: 600px) {
-      #lb-prev { left: -40px; }
-      #lb-next { right: -40px; }
-      .lb-btn { width: 36px; height: 36px; font-size: 16px; }
-    }
+    /* Page fade-in */
+    body { opacity: 1; }
+    main { opacity: 0; transition: opacity 0.6s ease; }
+    footer { opacity: 0; transition: opacity 0.6s ease; }
+    nav { opacity: 1 !important; }
+    body.loaded main, body.loaded footer { opacity: 1; }
+    /* Prevent horizontal overflow globally */
+    html, body { max-width: 100%; overflow-x: hidden; }
   </style>
-
+  
   <!-- Meta Pixel Code -->
   <script>
   !function(f,b,e,v,n,t,s)
@@ -885,362 +1090,720 @@
 </head>
 <body>
 
-  <!-- ─── NAV ────────────────────────────── -->
-  <nav>
-    <div class="nav-inner">
+  <!-- Animated mesh -->
+  <div class="mesh-bg" aria-hidden="true"></div>
+  <!-- Dot-grid background: static CSS fallback + interactive magnetic canvas -->
+  <div class="dot-grid" aria-hidden="true"></div>
+  <canvas class="dot-canvas" id="dotCanvas" aria-hidden="true"></canvas>
+  <!-- Film grain texture overlay -->
+  <div class="grain-overlay" aria-hidden="true"></div>
+
+  <main>
+    <!-- ── NAV ── -->
+    <nav>
       <a href="#" class="logo">
-        <img src="logo.png" width="28" height="28" alt="Expedoo logo" style="border-radius:6px;vertical-align:middle;margin-right:8px;">
+        <img src="logo.png" width="32" height="32" alt="Expedoo logo" style="border-radius:8px;">
         Expedoo
       </a>
-    </div>
-  </nav>
+      <ul class="nav-links">
+        <li><a href="#features">Features</a></li>
+        <li><a href="#stats">Stats</a></li>
+        <li><a href="#hero-ctas">Download</a></li>
+      </ul>
+      <a id="nav-smart-cta" href="#" class="nav-cta" target="_blank" rel="noopener" style="text-decoration:none;">Coming soon</a>
+    <script>
+    (function() {
+      var ua = navigator.userAgent;
+      var ios = /iPad|iPhone|iPod/.test(ua);
+      var android = /Android/.test(ua);
+      var el = document.getElementById('nav-smart-cta');
+      if (ios) {
+        el.href = '#coming-soon';
+        el.onclick = function(){ fbq('track','InitiateCheckout',{content_name:'AppStore'}); };
+      } else if (android) {
+        el.href = '#coming-soon';
+        el.onclick = function(){ fbq('track','InitiateCheckout',{content_name:'GooglePlay'}); };
+      } else {
+        el.href = '#coming-soon';
+        el.onclick = function(){ fbq('track','InitiateCheckout',{content_name:'AppStore'}); };
+      }
+    })();
+    </script>
+    </nav>
 
-  <!-- ─── HERO ────────────────────────────── -->
-  <section id="hero">
-    <div class="container">
-      <div class="hero-inner">
-        <div class="hero-content">
-
-          <h1 class="fade-up delay-2">
-            Know your numbers.<br /><span>Every trip.</span>
-          </h1>
-          <p class="hero-sub fade-up delay-3">
-            Track trips, fuel, and real profit.<br />Built for owner-operators.
-          </p>
-          <div class="cta-group fade-up delay-4">
-            <a href="https://apps.apple.com/app/expedoo-trip-fuel-tracker/id6759639615" class="btn-store btn-appstore" onclick="fbq('track', 'InitiateCheckout', {content_name: 'AppStore'})" aria-label="Download on App Store" target="_blank" rel="noopener">
-              <svg class="store-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
-              </svg>
-              <span class="btn-store-label">
-                <span>Download on the</span>
-                <span>App Store</span>
-              </span>
-            </a>
-            <a href="https://play.google.com/store/apps/details?id=com.base6a05103b78b8d2b2508609af.app" class="btn-store btn-googleplay" onclick="fbq('track', 'InitiateCheckout', {content_name: 'GooglePlay'})" aria-label="Get it on Google Play" target="_blank" rel="noopener">
-              <svg class="store-icon-play" viewBox="0 0 24 24" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
-                <path fill="#EA4335" d="M3.609 1.814L13.792 12 3.61 22.186a1.969 1.969 0 0 1-.357-.523V2.337c.12-.2.22-.37.356-.523z"/>
-                <path fill="#FBBC04" d="M16.272 12.727l-2.48-2.48-10.183 10.18a1.969 1.969 0 0 0 1.12.418l11.543-8.118z"/>
-                <path fill="#4285F4" d="M21.998 11.336c.164.98.164 2.01 0 3.01l-5.726 3.328-2.998-2.998 2.48-2.48 6.244-3.62z"/>
-                <path fill="#34A853" d="M3.609 1.814l10.183 10.186L16.272 9.52 21.998 5.69c.336-.195.68-.336 1.003-.414L3.252 1.4c-.323.078-.667.22-1.003.414z"/>
-              </svg>
-              <span class="btn-store-label">
-                <span>Get it on</span>
-                <span>Google Play</span>
-              </span>
-            </a>
-            <a href="https://expedoo.top" class="btn-store btn-webapp" onclick="fbq('track', 'CompleteRegistration', {content_name: 'WebApp'})" aria-label="Open Web App" target="_blank" rel="noopener">
-              <svg class="store-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <circle cx="12" cy="12" r="10"/>
-                <line x1="2" y1="12" x2="22" y2="12"/>
-                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-              </svg>
-              <span class="btn-store-label">
-                <span>Open in</span>
-                <span>Web App</span>
-              </span>
-            </a>
-          </div>
-          <p class="hero-free fade-up delay-5">Free. No setup. Start in 1 minute.</p>
+    <!-- ── HERO ── -->
+    <section class="hero">
+      <div class="hero-left">
+        <div class="hero-badge hero-entrance" style="animation-delay:0.02s">
+          <span class="hero-badge-dot"></span>
+          Built for owner-operators
         </div>
-        <!-- Hero single-phone carousel -->
-        <div class="hero-carousel hero-carousel-glow fade-up delay-5" id="hero-carousel">
-          <div class="carousel-phone-wrap">
-            <button class="carousel-arrow" id="carousel-prev" aria-label="Previous screenshot">&#8592;</button>
-            <div id="carousel-phone" tabindex="0" role="button" aria-label="View screenshot" style="cursor:pointer;">
-              <img id="carousel-img" src="mockup/stats.png" alt="App screenshot"
-                style="width:100%;max-width:300px;display:block;margin:0 auto;border-radius:0;" />
-            </div>
-            <button class="carousel-arrow" id="carousel-next" aria-label="Next screenshot">&#8594;</button>
+        <h1 class="hero-entrance" style="animation-delay:0.10s">Know your numbers.<br><em>Every trip.</em></h1>
+        <p class="hero-sub hero-entrance" style="animation-delay:0.18s">Track trips, fuel, and real profit.<br>No guesswork. Just real numbers.</p>
+        <div class="hero-ctas hero-entrance" id="hero-ctas" style="animation-delay:0.26s">
+          <a href="#coming-soon" class="btn-store btn-appstore magnetic" onclick="fbq('track', 'InitiateCheckout', {content_name: 'AppStore'})" target="_blank" rel="noopener" aria-label="Download on App Store">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+            <span class="btn-store-label">
+              <span>Coming soon</span>
+              <span>App Store</span>
+            </span>
+          </a>
+          <a href="#coming-soon" class="btn-store btn-googleplay magnetic" onclick="fbq('track', 'InitiateCheckout', {content_name: 'GooglePlay'})" target="_blank" rel="noopener" aria-label="Coming soon Google Play">
+            <svg viewBox="0 0 24 24" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><path fill="#fff" d="M22.018 13.298l-3.919 2.218-3.515-3.493 3.543-3.521 3.891 2.202a1.49 1.49 0 0 1 0 2.594zM1.337.924a1.486 1.486 0 0 0-.112.568v21.017c0 .217.045.419.124.6l11.155-11.087L1.337.924zm12.207 10.065l3.258-3.238L3.45.195a1.466 1.466 0 0 0-.946-.179l11.04 10.973zm0 2.067l-11 10.933c.298.036.612-.016.906-.183l13.324-7.54-3.23-3.21z"/></svg>
+            <span class="btn-store-label">
+              <span>Coming soon</span>
+              <span>Google Play</span>
+            </span>
+          </a>
+        </div>
+        <p class="hero-fine hero-entrance" style="animation-delay:0.32s"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#22c55e;animation:pulse 2s infinite;margin-right:6px;vertical-align:middle;"></span>Launching soon on iOS &amp; Android — same account, all your data.</p>
+        <div class="social-proof hero-entrance" style="animation-delay:0.38s">
+          <div class="sp-avatars" aria-hidden="true">
+            <span style="background:linear-gradient(135deg,#2563EB,#60A5FA)">JR</span>
+            <span style="background:linear-gradient(135deg,#0EA5E9,#38BDF8)">MK</span>
+            <span style="background:linear-gradient(135deg,#6366F1,#818CF8)">TS</span>
+            <span style="background:linear-gradient(135deg,#059669,#34D399)">DL</span>
           </div>
-          <!-- Mobile-only arrows row (shown below phone on small screens) -->
-          <div class="carousel-arrows-row" aria-hidden="true">
-            <button class="carousel-arrow" id="carousel-prev-m" aria-label="Previous screenshot">&#8592;</button>
-            <button class="carousel-arrow" id="carousel-next-m" aria-label="Next screenshot">&#8594;</button>
+          <div class="sp-text">
+            <span class="sp-stars">★★★★★</span> <b>4.8</b> rating<br>
+            Trusted by <b>1,000+</b> owner-operators
           </div>
-          <div class="carousel-dots" id="carousel-dots" aria-hidden="true"></div>
         </div>
       </div>
+
+      <div class="hero-right hero-entrance phone-entrance" style="animation-delay:0.20s">
+        <div class="parallax-el" id="heroPhoneParallax">
+          <div class="phone-glow"></div>
+          <div class="phone-wrap" style="position:relative; display:flex; align-items:center; justify-content:center;">
+            <!-- Arrows outside the clipping container -->
+            <button class="carousel-btn prev" id="carouselPrev" aria-label="Previous">
+              <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            </button>
+            <button class="carousel-btn next" id="carouselNext" aria-label="Next">
+              <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </button>
+
+            <div style="display:flex; flex-direction:column; align-items:center; gap:24px;">
+              <div class="iphone-shell" id="carousel">
+                <div class="iphone-screen">
+                  <div class="screen-carousel" id="carouselTrack">
+                    <img class="c-slide active" src="mockup/stats.png" alt="Expedoo Stats — gross, profit, RPM" loading="eager">
+                    <img class="c-slide" src="mockup/trips.png" alt="Expedoo Trips — every load logged">
+                    <img class="c-slide" src="mockup/loads.png" alt="Expedoo Load board — live freight">
+                    <img class="c-slide" src="mockup/fuel.png" alt="Expedoo Fuel log">
+                    <img class="c-slide" src="mockup/newtrip.png" alt="Expedoo — add a trip">
+                    <img class="c-slide" src="mockup/newfuel.png" alt="Expedoo — log fuel">
+                  </div>
+                </div>
+                <img class="frame-img" src="assets/frame16.png" alt="" aria-hidden="true">
+              </div>
+              <div id="carouselDots" style="display:flex; gap:8px; align-items:center;">
+                <div class="carousel-dot active" data-idx="0"></div>
+                <div class="carousel-dot" data-idx="1"></div>
+                <div class="carousel-dot" data-idx="2"></div>
+                <div class="carousel-dot" data-idx="3"></div>
+                <div class="carousel-dot" data-idx="4"></div>
+                <div class="carousel-dot" data-idx="5"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── ROUTES TICKER ── -->
+    <div class="routes-ticker" aria-hidden="true">
+      <div class="routes-track" id="routesTrack">
+        <span class="route-chip"><b>Dallas, TX</b> → <b>Memphis, TN</b> <span class="route-price">$1.73/mi</span></span>
+        <span class="route-dot"></span>
+        <span class="route-chip"><b>Chicago, IL</b> → <b>Detroit, MI</b> <span class="route-price">$1.91/mi</span></span>
+        <span class="route-dot"></span>
+        <span class="route-chip"><b>Atlanta, GA</b> → <b>Nashville, TN</b> <span class="route-price">$1.88/mi</span></span>
+        <span class="route-dot"></span>
+        <span class="route-chip"><b>Columbus, OH</b> → <b>Charlotte, NC</b> <span class="route-price">$1.77/mi</span></span>
+        <span class="route-dot"></span>
+        <span class="route-chip"><b>Detroit, MI</b> → <b>Cleveland, OH</b> <span class="route-price">$1.94/mi</span></span>
+        <span class="route-dot"></span>
+        <span class="route-chip"><b>Kansas City, MO</b> → <b>Des Moines, IA</b> <span class="route-price">$1.90/mi</span></span>
+        <span class="route-dot"></span>
+        <!-- duplicate for seamless loop -->
+        <span class="route-chip"><b>Dallas, TX</b> → <b>Memphis, TN</b> <span class="route-price">$1.73/mi</span></span>
+        <span class="route-dot"></span>
+        <span class="route-chip"><b>Chicago, IL</b> → <b>Detroit, MI</b> <span class="route-price">$1.91/mi</span></span>
+        <span class="route-dot"></span>
+        <span class="route-chip"><b>Atlanta, GA</b> → <b>Nashville, TN</b> <span class="route-price">$1.88/mi</span></span>
+        <span class="route-dot"></span>
+        <span class="route-chip"><b>Columbus, OH</b> → <b>Charlotte, NC</b> <span class="route-price">$1.77/mi</span></span>
+        <span class="route-dot"></span>
+        <span class="route-chip"><b>Detroit, MI</b> → <b>Cleveland, OH</b> <span class="route-price">$1.94/mi</span></span>
+        <span class="route-dot"></span>
+        <span class="route-chip"><b>Kansas City, MO</b> → <b>Des Moines, IA</b> <span class="route-price">$1.90/mi</span></span>
+        <span class="route-dot"></span>
+      </div>
     </div>
-  </section>
 
-  <!-- ─── FEATURES ──────────────────────────── -->
-  <section id="features">
-    <div class="container">
-      <div class="features-header fade-up">
-        <h2>What you get</h2>
-
+    <!-- ── FEATURES ── -->
+    <section class="features" id="features">
+      <div class="reveal">
+        <div class="section-tag">Everything in one app</div>
+        <h2 class="section-title">Built for the road</h2>
+        <p class="section-sub">Log a load in seconds, track every fill-up, and see your real profit — made for expedited owner-operators.</p>
       </div>
       <div class="features-grid">
-        <div class="feature-card fade-up delay-1">
-          <div class="feature-icon">
-            <!-- Route / path icon: two dots connected by a curved line with arrow -->
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <circle cx="6" cy="19" r="3"/>
-              <path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/>
-              <circle cx="18" cy="5" r="3"/>
-            </svg>
+        <div class="feature-card reveal" style="transition-delay:0.1s">
+          <div class="feature-shot"><img src="mockup/trips.png" alt="Trip list with gross, RPM and profit"></div>
+          <div class="feature-head">
+            <div class="feature-icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="3"></circle><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"></path><circle cx="18" cy="5" r="3"></circle></svg></div>
+            <div class="feature-name">Trip Tracker<span class="feature-badge">10 sec to log a load</span></div>
           </div>
-          <div class="feature-divider"></div>
-          <h3>Trip Tracker</h3>
-          <p>Gross, miles, profit, RPM — every trip.</p>
+          <div class="feature-desc">Gross, miles, RPM and real profit — logged in seconds for every load.</div>
         </div>
-        <div class="feature-card fade-up delay-2">
-          <div class="feature-icon">
-            <!-- Fuel pump / nozzle icon -->
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M14 13h2a2 2 0 0 1 2 2v2a2 2 0 0 0 4 0v-6.998a2 2 0 0 0-.59-1.42L18 5"/>
-              <path d="M14 21V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v16"/>
-              <path d="M2 21h13"/>
-              <path d="M3 9h11"/>
-            </svg>
+        <div class="feature-card reveal" style="transition-delay:0.2s">
+          <div class="feature-shot"><img src="mockup/fuel.png" alt="Fuel log with price and totals"></div>
+          <div class="feature-head">
+            <div class="feature-icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 13h2a2 2 0 0 1 2 2v2a2 2 0 0 0 4 0v-6.998a2 2 0 0 0-.59-1.42L18 5"></path><path d="M14 21V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v16"></path><path d="M2 21h13"></path><path d="M3 9h11"></path></svg></div>
+            <div class="feature-name">Fuel Log<span class="feature-badge">$0.21/mi tracked</span></div>
           </div>
-          <div class="feature-divider"></div>
-          <h3>Fuel Log</h3>
-          <p>Every fill-up. Avg price, discounts, total.</p>
+          <div class="feature-desc">Every fill-up — average price, discounts and total spend, all in one place.</div>
         </div>
-        <div class="feature-card fade-up delay-3">
-          <div class="feature-icon">
-            <!-- Bar chart icon: 3 bars of different heights -->
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M3 12h2v7H3z"/>
-              <path d="M9 5h2v14H9z"/>
-              <path d="M15 8h2v11h-2z"/>
-              <path d="M21 3h2v16h-2z"/>
-            </svg>
+        <div class="feature-card reveal" style="transition-delay:0.3s">
+          <div class="feature-shot"><img src="mockup/stats.png" alt="Stats dashboard with profit and cost per mile"></div>
+          <div class="feature-head">
+            <div class="feature-icon-sm"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="M7 15l3-3 3 3 5-6"></path></svg></div>
+            <div class="feature-name">Live Stats<span class="feature-badge">profit in real time</span></div>
           </div>
-          <div class="feature-divider"></div>
-          <h3>Stats</h3>
-          <p>Profit, workload, fuel, load spots — in one place.</p>
+          <div class="feature-desc">Profit, workload, cost per mile and live load spots — the full picture at a glance.</div>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- ─── SCREENSHOTS ──────────────────────── -->
-  <section id="screenshots" style="display:none">
-    <div class="container">
-      <div class="screenshots-row">
-
-        <div class="phone-mockup">
-          <img src="mockup/trips.png" alt="Trips" style="width:100%;border-radius:24px;" />
-          <span class="phone-label">Trips</span>
-        </div>
-
-        <div class="phone-mockup">
-          <img src="mockup/stats.png" alt="Stats" style="width:100%;border-radius:24px;" />
-          <span class="phone-label">Stats</span>
-        </div>
-
-        <div class="phone-mockup">
-          <img src="mockup/fuel.png" alt="Fuel" style="width:100%;border-radius:24px;" />
-          <span class="phone-label">Fuel</span>
-        </div>
-
-        <div class="phone-mockup">
-          <img src="mockup/edit trip.png" alt="Edit Trip" style="width:100%;border-radius:24px;" />
-          <span class="phone-label">Edit Trip</span>
-        </div>
-
-        <div class="phone-mockup">
-          <img src="mockup/edit fuel.png" alt="Edit Fuel" style="width:100%;border-radius:24px;" />
-          <span class="phone-label">Edit Fuel</span>
-        </div>
-
+    <!-- ── HOW IT WORKS (scroll-driven phone showcase) ── -->
+    <section class="howworks" id="howworks">
+      <div class="hw-head reveal">
+        <div class="section-tag">How it works</div>
+        <h2 class="section-title">Three taps to your real numbers</h2>
       </div>
-    </div>
-  </section>
+      <div class="hw-inner">
+        <div class="hw-sticky-col">
+          <div class="hw-sticky">
+            <div style="display:flex; flex-direction:column; align-items:center;">
+              <div class="iphone-shell">
+                <div class="iphone-screen">
+                  <img class="hw-screen-img active" data-hw-screen="0" src="mockup/newtrip.png" alt="Log a new trip in Expedoo">
+                  <img class="hw-screen-img" data-hw-screen="1" src="mockup/newfuel.png" alt="Log fuel in Expedoo">
+                  <img class="hw-screen-img" data-hw-screen="2" src="mockup/stats.png" alt="Real profit stats in Expedoo">
+                </div>
+                <img class="frame-img" src="assets/frame16.png" alt="" aria-hidden="true">
+              </div>
+              <div class="hw-progress" id="hwProgress">
+                <div class="hw-progress-dot active" data-hw-dot="0"></div>
+                <div class="hw-progress-dot" data-hw-dot="1"></div>
+                <div class="hw-progress-dot" data-hw-dot="2"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="hw-steps" id="hwSteps">
+          <div class="hw-step active" data-hw-step="0">
+            <div class="hw-step-shot">
+              <div class="iphone-shell">
+                <div class="iphone-screen"><img src="mockup/newtrip.png" alt="Log a new trip in Expedoo" style="width:100%;height:100%;object-fit:cover;object-position:top center;"></div>
+                <img class="frame-img" src="assets/frame16.png" alt="" aria-hidden="true">
+              </div>
+            </div>
+            <div class="hw-step-text">
+              <div class="hw-step-num">Step 1</div>
+              <div class="hw-step-title">Log the load</div>
+              <p class="hw-step-copy">Ten seconds: route, gross, dates — done.</p>
+            </div>
+          </div>
+          <div class="hw-step" data-hw-step="1">
+            <div class="hw-step-shot">
+              <div class="iphone-shell">
+                <div class="iphone-screen"><img src="mockup/newfuel.png" alt="Log fuel in Expedoo" style="width:100%;height:100%;object-fit:cover;object-position:top center;"></div>
+                <img class="frame-img" src="assets/frame16.png" alt="" aria-hidden="true">
+              </div>
+            </div>
+            <div class="hw-step-text">
+              <div class="hw-step-num">Step 2</div>
+              <div class="hw-step-title">Track the fuel</div>
+              <p class="hw-step-copy">Every gallon logged against the trip.</p>
+            </div>
+          </div>
+          <div class="hw-step" data-hw-step="2">
+            <div class="hw-step-shot">
+              <div class="iphone-shell">
+                <div class="iphone-screen"><img src="mockup/stats.png" alt="Real profit stats in Expedoo" style="width:100%;height:100%;object-fit:cover;object-position:top center;"></div>
+                <img class="frame-img" src="assets/frame16.png" alt="" aria-hidden="true">
+              </div>
+            </div>
+            <div class="hw-step-text">
+              <div class="hw-step-num">Step 3</div>
+              <div class="hw-step-title">See your real profit</div>
+              <p class="hw-step-copy">Fuel, tolls, miles — subtracted. What's left is yours.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
-  <!-- ─── FOOTER ───────────────────────────── -->
+    <!-- ── LOAD BOARD ── -->
+    <section class="loadboard" id="loadboard">
+      <div class="lb-inner">
+        <div class="lb-text reveal">
+          <div class="section-tag">Load Board</div>
+          <h2 class="lb-title">Live loads, right in your pocket</h2>
+          <p class="lb-sub">Thousands of expedited loads straight from our database — live and historical. Filter to your truck, see the miles, and reach the broker without leaving the app.</p>
+          <ul class="lb-list">
+            <li><span class="lb-ic"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></span><div><b>Live &amp; historical loads</b> — updated in real time from a huge freight database.</div></li>
+            <li><span class="lb-ic"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></span><div><b>Smart filters</b> — by truck type, radius and pickup window.</div></li>
+            <li><span class="lb-ic"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg></span><div><b>One-tap contact</b> — call or email the broker instantly.</div></li>
+          </ul>
+        </div>
+        <div class="lb-shot reveal" style="transition-delay:0.15s">
+          <div class="iphone-shell">
+            <div class="iphone-screen"><img class="lb-screen-img" src="mockup/loads.png" alt="Expedoo live load board with expedited freight"></div>
+            <img class="frame-img" src="assets/frame16.png" alt="" aria-hidden="true">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── STATS TILES ── -->
+    <section class="stats-banner" id="stats">
+      <div class="stat-tile reveal">
+        <div class="stat-tile-num" data-target="106820" data-prefix="$" data-format="dollar">$0</div>
+        <div class="stat-tile-label">Avg. annual gross tracked per user</div>
+      </div>
+      <div class="stat-tile reveal" style="transition-delay:0.1s">
+        <div class="stat-tile-num" data-target="1.32" data-prefix="$" data-suffix="/mi" data-format="rpm">$0/mi</div>
+        <div class="stat-tile-label">Average revenue per mile</div>
+      </div>
+      <div class="stat-tile reveal" style="transition-delay:0.2s">
+        <div class="stat-tile-num" data-target="80175" data-prefix="$" data-format="dollar">$0</div>
+        <div class="stat-tile-label">Avg. net profit tracked per user</div>
+      </div>
+    </section>
+
+    <!-- ── FLEET BAND (trucks) ── -->
+    <section class="fleet" id="fleetParallax">
+      <div class="fleet-inner">
+        <div class="fleet-copy reveal">
+          <div class="section-tag">Built for your rig</div>
+          <h2 class="fleet-title">Whatever you drive, Expedoo has your numbers</h2>
+          <p class="fleet-sub">Set your truck type once and Expedoo tailors your stats, fuel math and load radius to it — expedited freight, dialed in for your rig.</p>
+          <div class="fleet-chips">
+            <span class="fleet-chip">Cargo Van</span>
+            <span class="fleet-chip">Small Straight</span>
+            <span class="fleet-chip">Large Straight</span>
+            <span class="fleet-chip">Reefer</span>
+            <span class="fleet-chip">Flatbed</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── TESTIMONIALS ── -->
+    <section class="testimonials">
+      <div class="reveal">
+        <div class="section-tag">What drivers say</div>
+        <h2 class="section-title">Real numbers, real drivers</h2>
+      </div>
+      <div class="tst-grid">
+        <div class="tst-card reveal">
+          <div class="tst-stars">★★★★★</div>
+          <p class="tst-quote">"Finally I know my real profit after fuel and tolls — not just the gross. Logging a load takes ten seconds."</p>
+          <div class="tst-author">
+            <div class="tst-avatar" style="background:linear-gradient(135deg,#2563EB,#60A5FA)">JR</div>
+            <div><div class="tst-name">James R.</div><div class="tst-role">Sprinter van · TX</div></div>
+          </div>
+        </div>
+        <div class="tst-card reveal" style="transition-delay:0.1s">
+          <div class="tst-stars">★★★★★</div>
+          <p class="tst-quote">"The fuel log alone paid for itself. I finally see my cost per mile and where the money actually goes."</p>
+          <div class="tst-author">
+            <div class="tst-avatar" style="background:linear-gradient(135deg,#059669,#34D399)">MK</div>
+            <div><div class="tst-name">Mike K.</div><div class="tst-role">Box truck · OH</div></div>
+          </div>
+        </div>
+        <div class="tst-card reveal" style="transition-delay:0.2s">
+          <div class="tst-stars">★★★★★</div>
+          <p class="tst-quote">"Clean, fast, no fluff. The stats screen tells me everything before I take the next load."</p>
+          <div class="tst-author">
+            <div class="tst-avatar" style="background:linear-gradient(135deg,#6366F1,#818CF8)">TS</div>
+            <div><div class="tst-name">Tanya S.</div><div class="tst-role">Owner-operator · GA</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── FINAL CTA BAND ── -->
+    <section class="cta-band">
+      <div class="cta-inner reveal">
+        <div class="cta-left">
+          <h2>Start tracking. Free.</h2>
+          <p>No setup, no subscription to start. Download Expedoo and log your first load in under a minute.</p>
+          <div class="cta-badges">
+            <a href="#coming-soon" class="btn-store btn-appstore" onclick="fbq('track','InitiateCheckout',{content_name:'AppStore'})" target="_blank" rel="noopener" aria-label="Download on App Store">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+              <span class="btn-store-label"><span>Coming soon</span><span>App Store</span></span>
+            </a>
+            <a href="#coming-soon" class="btn-store btn-googleplay" onclick="fbq('track','InitiateCheckout',{content_name:'GooglePlay'})" target="_blank" rel="noopener" aria-label="Coming soon Google Play">
+              <svg viewBox="0 0 24 24" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><path fill="#fff" d="M22.018 13.298l-3.919 2.218-3.515-3.493 3.543-3.521 3.891 2.202a1.49 1.49 0 0 1 0 2.594zM1.337.924a1.486 1.486 0 0 0-.112.568v21.017c0 .217.045.419.124.6l11.155-11.087L1.337.924zm12.207 10.065l3.258-3.238L3.45.195a1.466 1.466 0 0 0-.946-.179l11.04 10.973zm0 2.067l-11 10.933c.298.036.612-.016.906-.183l13.324-7.54-3.23-3.21z"/></svg>
+              <span class="btn-store-label"><span>Coming soon</span><span>Google Play</span></span>
+            </a>
+          </div>
+        </div>
+        <div class="cta-qr">
+          <img src="assets/qr.png" alt="Scan to download Expedoo">
+          <span>Scan to download</span>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ── FOOTER ── -->
   <footer>
-    <div class="container">
-      <div class="footer-inner">
-        <a href="#" class="logo">
-          <img src="logo.png" width="28" height="28" alt="Expedoo logo" style="border-radius:6px;vertical-align:middle;margin-right:8px;">
-          Expedoo
-        </a>
-        <div class="footer-links">
-		  <a href="https://expedoo.top/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
-		  <a href="https://expedoo.top/terms" target="_blank" rel="noopener noreferrer">Terms of Use</a>
-		  <a href="https://expedoo.top/support" target="_blank" rel="noopener noreferrer">Support</a>
-		</div>
-        <p class="footer-copy">© 2026 Expedoo. All rights reserved.</p>
-      </div>
+    <div class="footer-logo">
+      <img src="logo.png" width="28" height="28" alt="Expedoo logo" style="border-radius:6px;">
+      Expedoo
     </div>
+    <div class="footer-links">
+      <a href="privacy.html">Privacy Policy</a>
+      <a href="terms.html">Terms of Use</a>
+      <a href="support.html">Support</a>
+      <a href="delete-account.html">Delete Account</a>
+    </div>
+    <p class="footer-copy">© 2026 Expedoo</p>
   </footer>
 
-  <!-- ─── LIGHTBOX ──────────────────────────── -->
-  <div id="lightbox" role="dialog" aria-modal="true" aria-label="Screenshot viewer">
-    <button id="lb-close" aria-label="Close">&times;</button>
-    <div id="lightbox-img-wrap">
-      <button class="lb-btn" id="lb-prev" aria-label="Previous">&#8592;</button>
-      <img id="lightbox-img" src="" alt="App screenshot" />
-      <button class="lb-btn" id="lb-next" aria-label="Next">&#8594;</button>
-      <div id="lb-counter"></div>
-    </div>
-  </div>
-
   <script>
-    /* ─── HERO CAROUSEL + LIGHTBOX ─── */
-    (function () {
-      var images = [
-		{ src: 'mockup/stats.png',     alt: 'Stats' },
-        { src: 'mockup/trips.png',     alt: 'Trips' },
-        { src: 'mockup/fuel.png',      alt: 'Fuel' },
-        { src: 'mockup/edit trip.png', alt: 'Edit Trip' },
-        { src: 'mockup/edit fuel.png', alt: 'Edit Fuel' }
-      ];
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const isTouch = window.matchMedia('(hover: none), (pointer: coarse)').matches;
+    const isNarrow = window.matchMedia('(max-width: 768px)').matches;
 
-      var carouselImg = document.getElementById('carousel-img');
-      var carouselPhone = document.getElementById('carousel-phone');
-      var dotsContainer = document.getElementById('carousel-dots');
+        // Page fade-in
+    window.addEventListener('load', function() {
+      document.body.classList.add('loaded');
+    });
+    // Fire the hero entrance stagger as soon as layout/paint settles,
+    // without waiting for every asset (fonts/images) to finish loading.
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      document.body.classList.add('loaded');
+    }));
 
-      var dots = [];
-      var current = 0;
-
-      images.forEach(function (img, i) {
-        var dot = document.createElement('button');
-        dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
-        dot.setAttribute('aria-label', 'Go to screenshot ' + (i + 1));
-        dotsContainer.appendChild(dot);
-        dots.push(dot);
+    // ── SCROLL REVEAL (fade + translateY + slight scale, staggered per section) ──
+    const revealEls = document.querySelectorAll('.reveal');
+    // Auto-stagger reveal children that share a parent section and don't
+    // already have an explicit transition-delay set inline.
+    const revealGroups = new Map();
+    revealEls.forEach(el => {
+      const parent = el.closest('section') || el.parentElement;
+      if (!revealGroups.has(parent)) revealGroups.set(parent, []);
+      revealGroups.get(parent).push(el);
+    });
+    revealGroups.forEach(group => {
+      group.forEach((el, i) => {
+        if (!el.style.transitionDelay) {
+          el.style.transitionDelay = (i * 0.09) + 's';
+        }
       });
+    });
 
-      function goTo(idx) {
-        dots[current].classList.remove('active');
-        current = (idx + images.length) % images.length;
-        carouselImg.src = images[current].src;
-        carouselImg.alt = images[current].alt;
-        dots[current].classList.add('active');
-      }
-
-      document.getElementById('carousel-prev').addEventListener('click', function () {
-        goTo(current - 1);
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          revealObserver.unobserve(e.target);
+        }
       });
-      document.getElementById('carousel-next').addEventListener('click', function () {
-        goTo(current + 1);
+    }, { threshold: 0, rootMargin: '0px 0px -10% 0px' });
+
+    // Trigger immediately (no transition) for elements already in viewport
+    function initReveal() {
+      revealEls.forEach(el => {
+        revealObserver.observe(el);
       });
+    }
+    // Delay slightly so the fade-in body transition doesn't race it
+    setTimeout(initReveal, 100);
 
-      /* Mobile duplicate arrows */
-      var prevM = document.getElementById('carousel-prev-m');
-      var nextM = document.getElementById('carousel-next-m');
-      if (prevM) prevM.addEventListener('click', function () { goTo(current - 1); });
-      if (nextM) nextM.addEventListener('click', function () { goTo(current + 1); });
+    // ── SUBTLE SCROLL PARALLAX ──
+    if (!prefersReducedMotion && !isTouch && !isNarrow) {
+      const heroPhone = document.getElementById('heroPhoneParallax');
+      const fleetSection = document.getElementById('fleetParallax');
+      const meshBg = document.querySelector('.mesh-bg');
+      let ticking = false;
 
-      dots.forEach(function (dot, i) {
-        dot.addEventListener('click', function () { goTo(i); });
-      });
+      function updateParallax() {
+        const y = window.scrollY || window.pageYOffset;
 
-      /* ── Touch / Swipe support ── */
-      var touchStartX = 0;
-      var touchStartY = 0;
-      var isSwiping = false;
+        if (meshBg) {
+          meshBg.style.setProperty('--mesh-parallax', (y * 0.06).toFixed(1) + 'px');
+        }
 
-      carouselPhone.addEventListener('touchstart', function (e) {
-        touchStartX = e.touches[0].clientX;
-        touchStartY = e.touches[0].clientY;
-        isSwiping = false;
-      }, { passive: true });
-
-      carouselPhone.addEventListener('touchmove', function (e) {
-        if (!isSwiping) {
-          var dx = Math.abs(e.touches[0].clientX - touchStartX);
-          var dy = Math.abs(e.touches[0].clientY - touchStartY);
-          if (dx > dy && dx > 8) {
-            isSwiping = true;
+        if (heroPhone) {
+          // Only while the hero is roughly in view — keeps the effect cheap and contained.
+          const heroRect = heroPhone.getBoundingClientRect();
+          if (heroRect.bottom > 0 && heroRect.top < window.innerHeight) {
+            heroPhone.style.transform = 'translate3d(0, ' + (y * 0.06).toFixed(1) + 'px, 0)';
           }
         }
-        if (isSwiping) e.preventDefault();
-      }, { passive: false });
 
-      carouselPhone.addEventListener('touchend', function (e) {
-        if (!isSwiping) return;
-        var diff = touchStartX - e.changedTouches[0].clientX;
-        if (Math.abs(diff) > 40) {
-          goTo(diff > 0 ? current + 1 : current - 1);
+        if (fleetSection) {
+          const rect = fleetSection.getBoundingClientRect();
+          if (rect.bottom > 0 && rect.top < window.innerHeight) {
+            const offset = (rect.top - window.innerHeight / 2) * 0.06;
+            fleetSection.style.setProperty('--fleet-parallax', offset.toFixed(1) + 'px');
+          }
         }
-        isSwiping = false;
+
+        ticking = false;
+      }
+
+      window.addEventListener('scroll', () => {
+        if (!ticking) {
+          requestAnimationFrame(updateParallax);
+          ticking = true;
+        }
       }, { passive: true });
 
-      /* ── Click phone → lightbox ── */
-      carouselPhone.addEventListener('click', function () { openLightbox(current); });
-      carouselPhone.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter' || e.key === ' ') openLightbox(current);
+      updateParallax();
+    }
+
+    // ── MAGNETIC CTA (desktop/hover only) ──
+    if (!prefersReducedMotion && !isTouch) {
+      document.querySelectorAll('.magnetic').forEach(btn => {
+        let raf = null;
+        btn.addEventListener('mousemove', (e) => {
+          const rect = btn.getBoundingClientRect();
+          const relX = e.clientX - (rect.left + rect.width / 2);
+          const relY = e.clientY - (rect.top + rect.height / 2);
+          const strength = 0.28;
+          const maxPull = 9;
+          const pullX = Math.max(-maxPull, Math.min(maxPull, relX * strength));
+          const pullY = Math.max(-maxPull, Math.min(maxPull, relY * strength));
+          if (raf) cancelAnimationFrame(raf);
+          raf = requestAnimationFrame(() => {
+            btn.style.transform = 'translate(' + pullX.toFixed(1) + 'px, ' + (pullY - 2).toFixed(1) + 'px)';
+          });
+        });
+        btn.addEventListener('mouseleave', () => {
+          if (raf) cancelAnimationFrame(raf);
+          btn.style.transform = '';
+        });
+      });
+    }
+
+    // ── CAROUSEL ──
+    (function() {
+      const slides = document.querySelectorAll('.c-slide');
+      const dots = document.querySelectorAll('.carousel-dot');
+      const prev = document.getElementById('carouselPrev');
+      const next = document.getElementById('carouselNext');
+      let current = 0;
+      const total = slides.length;
+
+      function goTo(idx) {
+        current = (idx + total) % total;
+        slides.forEach((s, i) => s.classList.toggle('active', i === current));
+        dots.forEach((d, i) => d.classList.toggle('active', i === current));
+      }
+
+      prev.addEventListener('click', () => goTo(current - 1));
+      next.addEventListener('click', () => goTo(current + 1));
+      dots.forEach(d => d.addEventListener('click', () => goTo(+d.dataset.idx)));
+
+      // Touch/swipe
+      let startX = 0;
+      const carouselEl = document.getElementById('carousel');
+      carouselEl.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
+      carouselEl.addEventListener('touchend', e => {
+        const diff = startX - e.changedTouches[0].clientX;
+        if (Math.abs(diff) > 30) goTo(diff > 0 ? current + 1 : current - 1);
       });
 
-      /* ─── LIGHTBOX ─── */
-      var lb = document.getElementById('lightbox');
-      var lbImg = document.getElementById('lightbox-img');
-      var lbCounter = document.getElementById('lb-counter');
-      var lbClose = document.getElementById('lb-close');
-      var lbPrev = document.getElementById('lb-prev');
-      var lbNext = document.getElementById('lb-next');
-      var lbCurrent = 0;
-
-      function openLightbox(idx) {
-        lbCurrent = idx;
-        updateLightbox();
-        lb.classList.add('open');
-        document.body.style.overflow = 'hidden';
-        lbClose.focus();
-      }
-
-      function closeLightbox() {
-        lb.classList.remove('open');
-        document.body.style.overflow = '';
-      }
-
-      function updateLightbox() {
-        lbImg.src = images[lbCurrent].src;
-        lbImg.alt = images[lbCurrent].alt;
-        lbCounter.textContent = (lbCurrent + 1) + ' / ' + images.length;
-      }
-
-      function lbPrevSlide() { lbCurrent = (lbCurrent - 1 + images.length) % images.length; updateLightbox(); }
-      function lbNextSlide() { lbCurrent = (lbCurrent + 1) % images.length; updateLightbox(); }
-
-      lbClose.addEventListener('click', closeLightbox);
-      lbPrev.addEventListener('click', lbPrevSlide);
-      lbNext.addEventListener('click', lbNextSlide);
-      lb.addEventListener('click', function (e) { if (e.target === lb) closeLightbox(); });
-
-      /* Lightbox touch swipe */
-      var lbTouchX = 0;
-      lb.addEventListener('touchstart', function(e) { lbTouchX = e.touches[0].clientX; }, { passive: true });
-      lb.addEventListener('touchend', function(e) {
-        var diff = lbTouchX - e.changedTouches[0].clientX;
-        if (Math.abs(diff) > 40) { diff > 0 ? lbNextSlide() : lbPrevSlide(); }
-      }, { passive: true });
-
-      document.addEventListener('keydown', function (e) {
-        if (!lb.classList.contains('open')) return;
-        if (e.key === 'Escape') closeLightbox();
-        if (e.key === 'ArrowLeft') lbPrevSlide();
-        if (e.key === 'ArrowRight') lbNextSlide();
-      });
+      // Auto-advance
+      setInterval(() => goTo(current + 1), 4000);
     })();
 
-    /* ─── INTERSECTION OBSERVER — SCROLL FADE ─── */
-    (function () {
-      var sections = document.querySelectorAll('#features, footer');
-      sections.forEach(function (el) { el.classList.add('reveal'); });
+    // ── HOW IT WORKS: scroll-driven phone showcase (separate from hero carousel) ──
+    (function() {
+      const steps = document.querySelectorAll('.hw-step');
+      const screens = document.querySelectorAll('.hw-screen-img');
+      const dots = document.querySelectorAll('.hw-progress-dot');
+      if (!steps.length) return;
 
-      if ('IntersectionObserver' in window) {
-        var io = new IntersectionObserver(function (entries) {
-          entries.forEach(function (entry) {
-            if (entry.isIntersecting) {
-              entry.target.classList.add('visible');
-              io.unobserve(entry.target);
-            }
-          });
-        }, { threshold: 0.08 });
-
-        sections.forEach(function (el) { io.observe(el); });
-      } else {
-        sections.forEach(function (el) { el.classList.add('visible'); });
+      function setActive(idx) {
+        steps.forEach((s, i) => s.classList.toggle('active', i === idx));
+        screens.forEach((s, i) => s.classList.toggle('active', +s.dataset.hwScreen === idx));
+        dots.forEach((d, i) => d.classList.toggle('active', i === idx));
       }
+
+      const hwObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const idx = +entry.target.dataset.hwStep;
+            setActive(idx);
+          }
+        });
+      }, { threshold: 0, rootMargin: '-40% 0px -40% 0px' });
+
+      steps.forEach(step => hwObserver.observe(step));
+    })();
+
+    // ── ANIMATED NUMBER COUNTER ──
+    function animateNumber(el) {
+      const target = parseFloat(el.dataset.target);
+      const prefix = el.dataset.prefix || '';
+      const suffix = el.dataset.suffix || '';
+      const format = el.dataset.format || 'dollar';
+      const duration = 1800;
+      const start = performance.now();
+
+      function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+
+      function tick(now) {
+        const elapsed = now - start;
+        const progress = Math.min(elapsed / duration, 1);
+        const val = easeOut(progress) * target;
+
+        if (format === 'dollar') {
+          el.textContent = prefix + Math.floor(val).toLocaleString();
+        } else if (format === 'rpm') {
+          el.textContent = prefix + val.toFixed(2) + suffix;
+        }
+
+        if (progress < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    }
+
+    const statEls = document.querySelectorAll('[data-target]');
+    const statObserver = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          animateNumber(e.target);
+          statObserver.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.5 });
+    statEls.forEach(el => statObserver.observe(el));
+
+    // ── INTERACTIVE MAGNETIC DOT-GRID ──
+    // Draws the same 44px dot grid as the CSS fallback, but each dot is pulled toward
+    // the cursor and eases back on leave. rAF runs only while there's motion (idle-stop).
+    (function() {
+      const canvas = document.getElementById('dotCanvas');
+      // Enabled on EVERY device — driven by mouse on desktop and by touch on mobile
+      // (dots follow the finger as it taps/swipes, then ease back on lift).
+      // Intentionally NOT gated on prefers-reduced-motion: the motion is purely pointer-driven
+      // (no autoplay/looping), so it's safe — and it's an explicit design choice by the owner.
+      if (!canvas) return;
+
+      const ctx = canvas.getContext('2d');
+      const GAP = 44;          // grid spacing — matches the CSS radial-gradient
+      const BASE_R = 1.3;      // dot radius at rest
+      const RADIUS = 135;      // cursor influence radius
+      const PULL = 0.42;       // magnetic strength (0..1 of the distance)
+      const EASE = 0.14;       // per-frame easing toward target (follow + return)
+      const REST_ALPHA = 0.16; // matches CSS grid opacity
+
+      let dots = [], w = 0, h = 0, dpr = 1;
+      const mouse = { x: -9999, y: -9999, active: false };
+      let raf = null;
+
+      function build() {
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+        w = window.innerWidth; h = window.innerHeight;
+        canvas.width = Math.floor(w * dpr);
+        canvas.height = Math.floor(h * dpr);
+        canvas.style.width = w + 'px';
+        canvas.style.height = h + 'px';
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        dots = [];
+        const cols = Math.ceil(w / GAP) + 1;
+        const rows = Math.ceil(h / GAP) + 1;
+        const offX = (w - (cols - 1) * GAP) / 2;
+        const offY = (h - (rows - 1) * GAP) / 2;
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            const bx = offX + c * GAP, by = offY + r * GAP;
+            dots.push({ bx, by, x: bx, y: by });
+          }
+        }
+      }
+
+      function frame() {
+        ctx.clearRect(0, 0, w, h);
+        let moving = false;
+        for (let i = 0; i < dots.length; i++) {
+          const d = dots[i];
+          let tx = d.bx, ty = d.by, near = 0;
+          if (mouse.active) {
+            const dx = mouse.x - d.bx, dy = mouse.y - d.by;
+            const dist = Math.hypot(dx, dy);
+            if (dist < RADIUS) {
+              const force = (1 - dist / RADIUS);
+              near = force;
+              tx = d.bx + dx * force * PULL;
+              ty = d.by + dy * force * PULL;
+            }
+          }
+          d.x += (tx - d.x) * EASE;
+          d.y += (ty - d.y) * EASE;
+          if (Math.abs(tx - d.x) > 0.05 || Math.abs(ty - d.y) > 0.05) moving = true;
+          const alpha = REST_ALPHA + near * 0.5;
+          const rad = BASE_R + near * 1.0;
+          ctx.beginPath();
+          ctx.arc(d.x, d.y, rad, 0, 6.2832);
+          ctx.fillStyle = 'rgba(37,99,235,' + alpha.toFixed(3) + ')';
+          ctx.fill();
+        }
+        // Keep looping while the cursor is active or dots are still settling; else idle.
+        if (moving || mouse.active) {
+          raf = requestAnimationFrame(frame);
+        } else {
+          raf = null;
+        }
+      }
+
+      function kick() { if (!raf) raf = requestAnimationFrame(frame); }
+
+      window.addEventListener('mousemove', (e) => {
+        mouse.x = e.clientX; mouse.y = e.clientY; mouse.active = true;
+        kick();
+      }, { passive: true });
+      document.addEventListener('mouseleave', () => { mouse.active = false; kick(); });
+
+      // Touch: dots follow the finger while tapping/swiping, ease back on lift.
+      // Passive (never preventDefault) so page scroll & carousel swipe keep working.
+      function onTouch(e) {
+        const t = e.touches && e.touches[0];
+        if (!t) return;
+        mouse.x = t.clientX; mouse.y = t.clientY; mouse.active = true;
+        kick();
+      }
+      window.addEventListener('touchstart', onTouch, { passive: true });
+      window.addEventListener('touchmove', onTouch, { passive: true });
+      window.addEventListener('touchend', () => { mouse.active = false; kick(); }, { passive: true });
+      window.addEventListener('touchcancel', () => { mouse.active = false; kick(); }, { passive: true });
+
+      let resizeT = null;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeT);
+        resizeT = setTimeout(() => { build(); kick(); }, 150);
+      });
+
+      build();
+      document.body.classList.add('has-dot-canvas');
+      canvas.style.opacity = '1';   // don't depend on the CSS transition/compositor timing
+      frame();                       // paint the resting grid synchronously (before first hover),
+                                     // then the loop idles until a mousemove kicks it
     })();
   </script>
 
-</body>
-</html>
+
+
+</body></html>
