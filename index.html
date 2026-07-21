@@ -388,7 +388,7 @@
       top: 2.2%; bottom: 2.2%; left: 2.9%; right: 2.9%;
       border-radius: 34px;
       overflow: hidden;
-      background: #eceef2;
+      background: #f3f3f8;
       z-index: 1;
     }
     /* iOS status bar — masks the baked-in Android bar; the Dynamic Island comes from the frame */
@@ -399,7 +399,7 @@
       z-index: 2;
       display: flex; align-items: center; justify-content: space-between;
       padding: 0 7%;
-      background: #eceef2;
+      background: #f3f3f8;
       pointer-events: none;
     }
     .ios-time {
@@ -415,7 +415,9 @@
     .screen-carousel .c-slide {
       position: absolute; top: 0; left: 0;
       width: 100%; height: 100%;
-      object-fit: cover; object-position: top center;
+      /* contain (не cover): скрин уже стекла (0.450 vs 0.482) → cover резал НИЗ = таб-бар.
+         contain показывает весь экран с навбаром; тонкие боковые поля сливаются с фоном #f3f3f8. */
+      object-fit: contain; object-position: center center;
       opacity: 0; transition: opacity 0.55s ease;
     }
     .screen-carousel .c-slide.active { opacity: 1; }
@@ -858,7 +860,7 @@
     .lb-ic svg { width: 18px; height: 18px; stroke: var(--accent); fill: none; stroke-width: 2; }
     .lb-shot { display: flex; justify-content: center; position: relative; }
     .lb-shot .iphone-shell { width: 286px; }
-    .lb-screen-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top center; }
+    .lb-screen-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; object-position: center center; }
 
     /* ── FLEET BAND (trucks) ── */
     .fleet {
@@ -1307,7 +1309,7 @@
           <div class="hw-step active" data-hw-step="0">
             <div class="hw-step-shot">
               <div class="iphone-shell">
-                <div class="iphone-screen"><img src="mockup/newtrip.png" alt="Log a new trip in Expedoo" style="width:100%;height:100%;object-fit:cover;object-position:top center;"></div>
+                <div class="iphone-screen"><img src="mockup/newtrip.png" alt="Log a new trip in Expedoo" style="width:100%;height:100%;object-fit:contain;object-position:center center;"></div>
                 <img class="frame-img" src="assets/frame16.png" alt="" aria-hidden="true">
               </div>
             </div>
@@ -1320,7 +1322,7 @@
           <div class="hw-step" data-hw-step="1">
             <div class="hw-step-shot">
               <div class="iphone-shell">
-                <div class="iphone-screen"><img src="mockup/newfuel.png" alt="Log fuel in Expedoo" style="width:100%;height:100%;object-fit:cover;object-position:top center;"></div>
+                <div class="iphone-screen"><img src="mockup/newfuel.png" alt="Log fuel in Expedoo" style="width:100%;height:100%;object-fit:contain;object-position:center center;"></div>
                 <img class="frame-img" src="assets/frame16.png" alt="" aria-hidden="true">
               </div>
             </div>
@@ -1333,7 +1335,7 @@
           <div class="hw-step" data-hw-step="2">
             <div class="hw-step-shot">
               <div class="iphone-shell">
-                <div class="iphone-screen"><img src="mockup/stats.png" alt="Real profit stats in Expedoo" style="width:100%;height:100%;object-fit:cover;object-position:top center;"></div>
+                <div class="iphone-screen"><img src="mockup/stats.png" alt="Real profit stats in Expedoo" style="width:100%;height:100%;object-fit:contain;object-position:center center;"></div>
                 <img class="frame-img" src="assets/frame16.png" alt="" aria-hidden="true">
               </div>
             </div>
